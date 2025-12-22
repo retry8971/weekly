@@ -10,6 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Debug connection
+        env:
+          SSH_HOST: ${{ secrets.DEPLOY_HOST }}
+          SSH_PASS: ${{ secrets.DEPLOY_PASSWORD }}
+        run: |
+          echo "=== Debug Info ==="
+          echo "SSH_HOST value: [${SSH_HOST}]"
+          echo "SSH_HOST length: ${#SSH_HOST}"
+          echo "SSH_PASS length: ${#SSH_PASS}"
+          
       - name: Deploy via SSH
         env:
           SSH_HOST: ${{ secrets.DEPLOY_HOST }}
