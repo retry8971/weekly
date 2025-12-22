@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_price_day_tx(code: str, end_date: str = '', count: int = 10, frequency: str = '1d') -> pd.DataFrame:
+    code = code.lower()
     """腾讯日线数据获取"""
     unit = 'week' if frequency == '1w' else 'month' if frequency == '1M' else 'day'
     
@@ -30,6 +31,7 @@ def get_price_day_tx(code: str, end_date: str = '', count: int = 10, frequency: 
         end_date = ''
     
     url = f'http://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param={code},{unit},,{end_date},{count},qfq'
+
     try:
         st = json.loads(requests.get(url, timeout=10).content)
 
@@ -56,7 +58,7 @@ def get_price_day_tx(code: str, end_date: str = '', count: int = 10, frequency: 
         df.index.name = ''
         return df
     except Exception as e:
-        raise Exception(f"腾讯日线获取失败: {code}, {e}")
+        raise Exception(f"腾讯日线获取失败: {code}, {e} \n {url}")
 
 
 def get_price_sina(code: str, end_date: str = '', count: int = 10, frequency: str = '60m') -> pd.DataFrame:
@@ -139,20 +141,28 @@ def get_kline(market: str, code: str, year: int, week: int) -> Optional[Dict[str
         
         # 格式化日期
         end_date_fmt = f"{end_date[:4]}-{end_date[4:6]}-{end_date[6:]}"
+        start_date_fmt = f"{start_date[:4]}-{start_date[4:6]}-{start_date[6:]}"
         
-        print(f"Ashare获取K线: {ashare_code}, end_date={end_date_fmt}")
+        # 如果结束日期是未来，使用当天日期
+        today = datetime.datetime.now().strftime('%Y-%m-%d')
+        actual_end_date = min(end_date_fmt, today)
         
-        df = get_price(ashare_code, end_date=end_date_fmt, count=5, frequency='1d')
+        print(f"Ashare获取K线: {ashare_code}, 周期={start_date_fmt}~{end_date_fmt}, 实际截止={actual_end_date}")
+        
+        # 获取更多数据以确保覆盖当周
+        df = get_price(ashare_code, end_date=actual_end_date, count=10, frequency='1d')
 
         if df.empty:
+            print(f"Ashare K线为空: {ashare_code}")
             return None
         
-        # 过滤当周数据
-        start_dt = pd.to_datetime(f"{start_date[:4]}-{start_date[4:6]}-{start_date[6:]}")
-        end_dt = pd.to_datetime(end_date_fmt)
+        # 过滤当周数据（使用实际结束日期）
+        start_dt = pd.to_datetime(start_date_fmt)
+        end_dt = pd.to_datetime(actual_end_date)
         week_df = df[(df.index >= start_dt) & (df.index <= end_dt)]
         
         if week_df.empty:
+            print(f"Ashare 周内无数据: {ashare_code}, 原始数据范围={df.index.min()}~{df.index.max()}, 过滤范围={start_dt}~{end_dt}")
             return None
         
         open_price = float(week_df.iloc[0]['open'])

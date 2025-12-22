@@ -655,6 +655,7 @@
 
         .stock-modal-body .rec-row {
             display: flex;
+            align-items: flex-start;
             padding: 0.5rem 0;
             font-size: 0.9rem;
             gap: 1rem;
@@ -1209,6 +1210,8 @@
         init();
 
         // Stock History Modal
+        let stockTrackingCache = null;  // 缓存股票跟踪数据
+
         async function showStockHistory(code, name) {
             const modal = document.getElementById('stockDetailModal');
             const title = document.getElementById('stockModalTitle');
@@ -1219,10 +1222,13 @@
             modal.style.display = 'flex';
 
             try {
-                const res = await fetch('/api/stock-tracking');
-                const data = await res.json();
-                const stocks = data.data?.stocks || [];
-                const stock = stocks.find(s => s.stock_code === code.replace(/^[A-Z]+\./, ''));
+                // 使用缓存，避免重复请求
+                if (!stockTrackingCache) {
+                    const res = await fetch('/api/stock-tracking');
+                    const data = await res.json();
+                    stockTrackingCache = data.data?.stocks || [];
+                }
+                const stock = stockTrackingCache.find(s => s.stock_code === code.replace(/^[A-Z]+\./, ''));
 
                 if (!stock || !stock.recommendations?.length) {
                     body.innerHTML = '<div style="text-align:center;color:var(--text-secondary)">暂无历史推荐记录</div>';
@@ -1242,21 +1248,23 @@
                 body.innerHTML = '<ul style="list-style:none;padding:0;margin:0">' + sortedTimes.map((time, idx) => {
                     const items = groups[time];
                     const isFirst = idx === 0;
-                    const names = items.map(r => r.recommender).join(', ');
+                    const namesPreview = items.map(r => r.recommender).join(', ');
                     return `
                         <li class="time-group">
                             <div class="time-header" onclick="toggleStockGroup(this)">
                                 <span style="color:var(--accent-color);font-weight:600;min-width:5.5rem">${time}</span>
-                                <span class="names-preview" style="flex:1;color:var(--text-secondary);font-size:0.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:${isFirst ? 'none' : 'block'}">${names}</span>
+                                <span class="names-preview" style="flex:1;color:var(--text-secondary);font-size:0.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:${isFirst ? 'none' : 'block'}">${namesPreview}</span>
                                 <span style="color:var(--text-secondary);font-size:0.75rem;background:rgba(0,0,0,0.3);padding:0.15rem 0.4rem;border-radius:10px;margin-left:auto">${items.length}条 ${isFirst ? '▼' : '▶'}</span>
                             </div>
                             <div class="time-items" style="display:${isFirst ? 'block' : 'none'}">
-                                ${items.map(r => `
+                                ${items.map(r => {
+                        const ratingClass = getRatingClass(r.recommender);
+                        return `
                                     <div class="rec-row">
-                                        <span style="color:var(--accent-color);font-weight:500;min-width:5rem">${r.recommender}</span>
+                                        <span class="tag ${ratingClass}" style="min-width:5rem;text-align:center">${r.recommender}</span>
                                         <span style="color:var(--text-secondary);flex:1">${r.reason || '-'}</span>
                                     </div>
-                                `).join('')}
+                                `}).join('')}
                             </div>
                         </li>
                     `;

@@ -76,23 +76,31 @@ class MongoDB:
             upsert=True
         )
     
-    def update_stock(self, year: int, week: int, stock_name: str, updates: Dict):
-        """更新单只股票数据"""
+    def update_stock(self, year: int, week: int, stock_name: str, updates: Dict) -> bool:
+        """更新单只股票数据，返回是否成功找到并更新"""
         # 获取当前数据
         doc = self.recommendations.find_one({'year': year, 'week': week})
         if not doc:
-            return
+            print(f"[UpdateStock] 未找到周数据: {year}W{week}")
+            return False
         
         stocks = doc.get('stocks', [])
+        found = False
         for stock in stocks:
             if stock.get('stock_name') == stock_name:
                 stock.update(updates)
+                found = True
                 break
+        
+        if not found:
+            print(f"[UpdateStock] 未找到股票: {stock_name}")
+            return False
         
         self.recommendations.update_one(
             {'year': year, 'week': week},
             {'$set': {'stocks': stocks, 'updated_at': datetime.now()}}
         )
+        return True
     
     def mark_week_tracking_synced(self, year: int, week: int):
         """标记周数据已完成股票跟踪同步"""

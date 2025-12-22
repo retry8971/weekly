@@ -185,6 +185,33 @@ class RecommendationService:
         
         print(f"[ResolveCode] 开始解析 {year}年第{week}周, 共 {len(stocks)} 只股票")
         
+        # 第一步：按股票名称去重，合并推荐人
+        name_map = {}  # key: stock_name, value: stock dict
+        for stock in stocks:
+            stock_name = stock.get('stock_name', '')
+            if not stock_name:
+                continue
+            
+            if stock_name not in name_map:
+                name_map[stock_name] = stock.copy()
+            else:
+                # 合并推荐人
+                existing = name_map[stock_name]
+                existing_recommenders = set(existing.get('recommenders', []))
+                new_recommenders = set(stock.get('recommenders', []))
+                existing['recommenders'] = list(existing_recommenders | new_recommenders)
+                # 如果已有代码，保留
+                if stock.get('market') and stock.get('stock_code'):
+                    existing['market'] = stock['market']
+                    existing['stock_code'] = stock['stock_code']
+                    existing['status'] = stock.get('status', 'resolved')
+        
+        # 转回列表
+        stocks = list(name_map.values())
+        name_dedup_count = len(data.get('stocks', [])) - len(stocks)
+        if name_dedup_count > 0:
+            print(f"[ResolveCode] 按名称去重: 合并 {name_dedup_count} 条重复记录")
+        
         success = 0
         error = 0
         
@@ -200,24 +227,54 @@ class RecommendationService:
             print(f"[ResolveCode] 搜索结果: {stock_name} -> {result}")
             
             if result:
-                updates = {
-                    'market': result['market'],
-                    'stock_code': result['code'],
-                    'status': 'resolved'
-                }
+                stock['market'] = result['market']
+                stock['stock_code'] = result['code']
+                stock['status'] = 'resolved'
                 # 如果返回了正确的股票名，则矫正
                 if result.get('name') and result['name'] != stock_name:
                     print(f"[ResolveCode] 矫正股票名: {stock_name} -> {result['name']}")
-                    updates['stock_name'] = result['name']
-                
-                self.db.update_stock(year, week, stock_name, updates)
+                    stock['stock_name'] = result['name']
                 success += 1
             else:
                 error += 1
         
-        # 去重合并：对相同市场+代码的股票进行合并
-        merged_count = self._merge_duplicate_stocks(year, week)
+        # 第二步：按市场+代码去重合并
+        code_map = {}  # key: "market_code", value: stock dict
+        for stock in stocks:
+            market = stock.get('market', '')
+            code = stock.get('stock_code', '')
+            
+            if not market or not code:
+                # 没有代码的股票直接保留
+                key = f"_no_code_{stock.get('stock_name', '')}"
+                code_map[key] = stock
+                continue
+            
+            key = f"{market}_{code}"
+            
+            if key not in code_map:
+                code_map[key] = stock
+            else:
+                # 合并推荐人
+                existing = code_map[key]
+                existing_recommenders = set(existing.get('recommenders', []))
+                new_recommenders = set(stock.get('recommenders', []))
+                existing['recommenders'] = list(existing_recommenders | new_recommenders)
         
+        # 转回列表
+        merged_stocks = list(code_map.values())
+        code_dedup_count = len(stocks) - len(merged_stocks)
+        if code_dedup_count > 0:
+            print(f"[ResolveCode] 按代码去重: 合并 {code_dedup_count} 条重复记录")
+        
+        # 保存最终结果
+        self.db.save_week_data(
+            year, week, merged_stocks,
+            data.get('raw_text', ''),
+            data.get('recommender_messages', {})
+        )
+        
+        merged_count = name_dedup_count + code_dedup_count
         print(f"[ResolveCode] 完成: success={success}, error={error}, merged={merged_count}")
         return {'success': success, 'error': error, 'merged': merged_count}
     
@@ -296,24 +353,35 @@ class RecommendationService:
             code = stock.get('stock_code')
             
             if not market or not code:
+                print(f"[FetchKline] 跳过无代码: {stock.get('stock_name')}")
                 error += 1
                 continue
             
-            kline = stock_service.get_kline(market, code, year, week)
-            if kline:
-                self.db.update_stock(year, week, stock['stock_name'], {
-                    'open_price': kline['open_price'],
-                    'close_price': kline['close_price'],
-                    'change_pct': kline['change_pct'],
-                    'status': 'completed'
-                })
-                success += 1
-            else:
+            try:
+                kline = stock_service.get_kline(market, code, year, week)
+                if kline:
+                    updated = self.db.update_stock(year, week, stock['stock_name'], {
+                        'open_price': kline['open_price'],
+                        'close_price': kline['close_price'],
+                        'change_pct': kline['change_pct'],
+                        'status': 'completed'
+                    })
+                    if updated:
+                        success += 1
+                    else:
+                        print(f"[FetchKline] 更新失败: {stock['stock_name']} (数据库未找到)")
+                        error += 1
+                else:
+                    print(f"[FetchKline] K线为空: {market}.{code} {stock.get('stock_name')}")
+                    error += 1
+            except Exception as e:
+                print(f"[FetchKline] 异常: {market}.{code} {stock.get('stock_name')} - {e}")
                 error += 1
             
             import time
             time.sleep(0.3)
         
+        print(f"[FetchKline] 完成: success={success}, error={error}")
         return {'success': success, 'error': error}
     
     # ==================== 排行榜 ====================

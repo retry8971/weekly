@@ -105,7 +105,7 @@
         .card {
             background: var(--card-bg);
             border-radius: 12px;
-            padding: 1.5rem;
+            padding: .5rem;
             margin-bottom: 1.5rem;
             border: 1px solid var(--border-color);
         }
@@ -287,7 +287,6 @@
 
         .loading {
             text-align: center;
-            padding: 2rem;
             color: var(--text-secondary);
         }
 
@@ -370,6 +369,99 @@
 
             .btn {
                 width: 100%;
+            }
+
+            /* 移动端卡片式布局 */
+            .stock-table {
+                display: block;
+                margin-top: 0.5rem;
+            }
+
+            .stock-table thead {
+                display: none !important;
+                height: 0;
+                overflow: hidden;
+            }
+
+            .stock-table tbody {
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .stock-table tr {
+                display: grid;
+                grid-template-columns: 1fr auto;
+                grid-template-rows: auto auto auto;
+                padding: 0.75rem;
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                gap: 0.25rem 0.5rem;
+            }
+
+            .stock-table td {
+                border-bottom: none;
+                padding: 0;
+                white-space: normal;
+            }
+
+            /* 序号 - 隐藏 */
+            .stock-table td:first-child {
+                display: none;
+            }
+
+            /* 股票名称 - 第1行左 */
+            .stock-table td:nth-child(2) {
+                font-weight: 600;
+                font-size: 1rem;
+                grid-column: 1;
+                grid-row: 1;
+            }
+
+            /* 代码 - 第1行左(紧跟名称) */
+            .stock-table td:nth-child(3) {
+                color: var(--text-secondary);
+                font-size: 0.85rem;
+                grid-column: 1;
+                grid-row: 1;
+                margin-left: auto;
+                display: none;
+            }
+
+            /* 推荐人 - 第2行 */
+            .stock-table td:nth-child(4) {
+                grid-column: 1 / -1;
+                grid-row: 2;
+                font-size: 0.8rem;
+                color: var(--text-secondary);
+            }
+
+            /* 涨跌幅 - 第1行右 */
+            .stock-table td:nth-child(5) {
+                font-weight: 600;
+                font-size: 0.9rem;
+                grid-column: 2;
+                grid-row: 1;
+            }
+
+            /* 操作按钮 - 第3行 */
+            .stock-table td:last-child {
+                grid-column: 1 / -1;
+                grid-row: 3;
+                padding-top: 0.5rem;
+                border-top: 1px solid var(--border-color);
+                margin-top: 0.25rem;
+            }
+
+            .action-btns {
+                justify-content: flex-end;
+                gap: 0.5rem;
+            }
+
+            .action-btns .btn-sm {
+                padding: 0.35rem 0.75rem;
+                font-size: 0.75rem;
             }
         }
     </style>
