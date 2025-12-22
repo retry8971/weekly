@@ -82,23 +82,29 @@
             }
         }
 
-        .nav-links {
+        .controls {
             display: flex;
             gap: 0.5rem;
+            align-items: center;
         }
 
-        .nav-links a {
+        .nav-btn {
             background: var(--card-bg);
             border: var(--glass-border);
             color: var(--text-primary);
             padding: 0.5rem 0.75rem;
             border-radius: 0.375rem;
+            cursor: pointer;
             text-decoration: none;
-            font-size: 0.85rem;
+            font-size: 1rem;
+            line-height: 1;
             transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .nav-links a:hover {
+        .nav-btn:hover {
             background: var(--bg-gradient-1);
         }
 
@@ -471,11 +477,11 @@
     <div class="container">
         <div class="top-bar">
             <h1>ADMIN PANEL</h1>
-            <div class="nav-links">
-                <a href="#" onclick="toggleTheme();return false;" title="切换主题">🌓</a>
-                <a href="ranking.html">排行榜</a>
-                <a href="recommender.html">推荐人</a>
-                <a href="stocks.html">跟踪</a>
+            <div class="controls">
+                <a href="ranking.html" class="nav-btn" title="排行榜">🏆</a>
+                <a href="recommender.html" class="nav-btn" title="推荐人">👥</a>
+                <a href="stocks.html" class="nav-btn" title="股票跟踪">📈</a>
+                <button class="nav-btn" onclick="toggleTheme()" title="切换主题">🌓</button>
             </div>
         </div>
 
