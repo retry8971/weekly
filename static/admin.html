@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票推荐管理</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-color: #3b82f6;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --bg-gradient-1: rgba(59, 130, 246, 0.1);
+            --bg-gradient-2: rgba(16, 185, 129, 0.1);
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f1f5f9;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: rgba(0, 0, 0, 0.1);
+            --glass-border: 1px solid rgba(0, 0, 0, 0.1);
+            --bg-gradient-1: rgba(59, 130, 246, 0.05);
+            --bg-gradient-2: rgba(16, 185, 129, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            background-image:
+                radial-gradient(circle at 10% 20%, var(--bg-gradient-1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, var(--bg-gradient-2) 0%, transparent 40%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 1.5rem 1rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        .top-bar h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.025em;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-links a {
+            background: var(--card-bg);
+            border: var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover {
+            background: var(--bg-gradient-1);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .form-group label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        input,
+        textarea,
+        select {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.5rem 0.8rem;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+            width: 100%;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.85;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+            color: #000;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .week-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .week-item {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 6px;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .week-item:hover {
+            background: rgba(59, 130, 246, 0.3);
+        }
+
+        .week-item.active {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .status {
+            padding: 0.8rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+        }
+
+        .status.success {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--success-color);
+        }
+
+        .status.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-color);
+        }
+
+        .status.info {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--accent-color);
+        }
+
+        .stock-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            table-layout: fixed;
+        }
+
+        .stock-table th,
+        .stock-table td {
+            padding: 0.6rem 0.4rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .stock-table th {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .stock-table td:nth-child(4) {
+            white-space: normal;
+        }
+
+        .positive {
+            color: var(--danger-color);
+        }
+
+        .negative {
+            color: var(--success-color);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        /* 编辑弹窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.visible {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            width: 90%;
+            max-width: 450px;
+        }
+
+        .modal h3 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .modal .form-group {
+            margin-bottom: 0.8rem;
+        }
+
+        .modal .form-group label {
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+
+        .modal input,
+        .modal textarea {
+            width: 100%;
+        }
+
+        .modal textarea {
+            min-height: 80px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+
+        /* 小按钮 */
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 0.3rem;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                flex-direction: column;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="top-bar">
+            <h1>ADMIN PANEL</h1>
+            <div class="nav-links">
+                <a href="#" onclick="toggleTheme();return false;" title="切换主题">🌓</a>
+                <a href="ranking.html">排行榜</a>
+                <a href="recommender.html">推荐人</a>
+                <a href="stocks.html">跟踪</a>
+            </div>
+        </div>
+
+        <!-- 周选择 -->
+        <div class="card">
+            <h2>📅 选择周</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>年份</label>
+                    <input type="number" id="yearInput" style="width: 100px;">
+                </div>
+                <div class="form-group">
+                    <label>周数</label>
+                    <input type="number" id="weekInput" style="width: 80px;" min="1" max="53">
+                </div>
+                <div class="form-group" style="justify-content: flex-end;">
+                    <button class="btn btn-primary" onclick="selectWeek()">选择</button>
+                </div>
+            </div>
+            <div id="weekList" class="week-list"></div>
+        </div>
+
+        <!-- 原始文本 -->
+        <div class="card">
+            <h2>📝 推荐原始文本</h2>
+            <textarea id="rawText" placeholder="粘贴推荐原始文本..."></textarea>
+            <div class="btn-group" style="margin-top: 1rem;">
+                <button class="btn btn-primary" onclick="saveRawText()">保存文本</button>
+            </div>
+        </div>
+
+        <!-- 操作 -->
+        <div class="card">
+            <h2>⚡ 操作</h2>
+            <div class="btn-group">
+                <button class="btn btn-warning" onclick="parseWithGemini()">Gemini解析</button>
+                <button class="btn btn-success" onclick="resolveCodes()">填充代码</button>
+                <button class="btn btn-primary" onclick="fetchKline()">同步股价</button>
+                <button class="btn btn-success" onclick="recalculateStats()">重算统计</button>
+                <button class="btn btn-danger" onclick="deleteWeek()">删除本周</button>
+            </div>
+            <div id="statusArea"></div>
+        </div>
+
+        <!-- 股票列表 -->
+        <div class="card">
+            <h2>📈 股票列表</h2>
+            <div id="stockList" class="loading">选择一周查看数据</div>
+        </div>
+    </div>
+
+    <!-- 编辑股票弹窗 -->
+    <div id="editModal" class="modal-overlay" onclick="closeEditModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <h3>✨ 编辑股票</h3>
+            <input type="hidden" id="editOldStockName">
+            <div class="form-group">
+                <label>股票名称</label>
+                <div style="display:flex;gap:0.5rem">
+                    <input type="text" id="editStockName" style="flex:1">
+                    <button class="btn btn-sm" onclick="guessStockCode()"
+                        style="white-space:nowrap;opacity:0.7">猜一下</button>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group" style="flex:1">
+                    <label>市场</label>
+                    <select id="editMarket">
+                        <option value="">--</option>
+                        <option value="SH">SH</option>
+                        <option value="SZ">SZ</option>
+                        <option value="BJ">BJ</option>
+                        <option value="HK">HK</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex:2">
+                    <label>股票代码</label>
+                    <input type="text" id="editStockCode" oninput="autoSelectMarket(this.value)">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>推荐人（每行一个）</label>
+                <textarea id="editRecommenders" placeholder="每行一个推荐人"></textarea>
+            </div>
+            <div id="editStatus" style="font-size:0.8rem;min-height:1.2rem;color:var(--text-secondary)"></div>
+            <div class="modal-actions">
+                <button class="btn" onclick="closeEditModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveStockEdit()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', next === 'dark' ? '' : next);
+            localStorage.setItem('theme', next);
+        }
+
+        // 初始化主题
+        (function () {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+
+        let currentYear = null;
+        let currentWeek = null;
+
+        // 解析URL hash (格式: #2025-W51)
+        function parseHash() {
+            const hash = window.location.hash.slice(1);
+            if (hash) {
+                const match = hash.match(/^(\d{4})-W?(\d{1,2})$/i);
+                if (match) {
+                    return { year: parseInt(match[1]), week: parseInt(match[2]) };
+                }
+            }
+            return null;
+        }
+
+        // 更新URL hash
+        function updateHash() {
+            const newHash = `${currentYear}-W${currentWeek}`;
+            if (window.location.hash !== `#${newHash}`) {
+                history.replaceState(null, '', `#${newHash}`);
+            }
+        }
+
+        // 初始化
+        async function init() {
+            // 优先从hash读取
+            const hashData = parseHash();
+            if (hashData) {
+                currentYear = hashData.year;
+                currentWeek = hashData.week;
+            } else {
+                // 获取当前周
+                const res = await fetch('/api/admin/current-week');
+                const data = await res.json();
+                currentYear = data.data.year;
+                currentWeek = data.data.week;
+            }
+
+            document.getElementById('yearInput').value = currentYear;
+            document.getElementById('weekInput').value = currentWeek;
+            updateHash();
+
+            await loadWeekList();
+            await loadWeekData();
+        }
+
+        // 监听hash变化
+        window.addEventListener('hashchange', () => {
+            const hashData = parseHash();
+            if (hashData && (hashData.year !== currentYear || hashData.week !== currentWeek)) {
+                currentYear = hashData.year;
+                currentWeek = hashData.week;
+                document.getElementById('yearInput').value = currentYear;
+                document.getElementById('weekInput').value = currentWeek;
+                loadWeekData();
+                loadWeekList();
+            }
+        });
+
+        // 加载周列表
+        async function loadWeekList() {
+            const res = await fetch('/api/admin/weeks');
+            const data = await res.json();
+            const weeks = data.data || [];
+
+            const container = document.getElementById('weekList');
+            container.innerHTML = weeks.map(w => `
+                <div class="week-item ${w.year === currentYear && w.week === currentWeek ? 'active' : ''}" 
+                     onclick="selectWeekItem(${w.year}, ${w.week})">
+                    ${w.year}-W${w.week}
+                </div>
+            `).join('');
+        }
+
+        // 选择周
+        function selectWeek() {
+            currentYear = parseInt(document.getElementById('yearInput').value);
+            currentWeek = parseInt(document.getElementById('weekInput').value);
+            updateHash();
+            loadWeekData();
+            loadWeekList();
+        }
+
+        function selectWeekItem(year, week) {
+            currentYear = year;
+            currentWeek = week;
+            document.getElementById('yearInput').value = year;
+            document.getElementById('weekInput').value = week;
+            updateHash();
+            loadWeekData();
+            loadWeekList();
+        }
+
+        // 加载周数据
+        async function loadWeekData() {
+            if (!currentYear || !currentWeek) return;
+
+            showStatus('info', '加载中...');
+
+            try {
+                const res = await fetch(`/api/admin/week/${currentYear}/${currentWeek}`);
+                const data = await res.json();
+                const weekData = data.data || {};
+
+                // 填充原始文本
+                document.getElementById('rawText').value = weekData.raw_text || '';
+
+                // 显示股票列表
+                renderStockList(weekData.stocks || []);
+
+                clearStatus();
+            } catch (e) {
+                showStatus('error', '加载失败: ' + e.message);
+            }
+        }
+
+        // 渲染股票列表
+        function renderStockList(stocks) {
+            const container = document.getElementById('stockList');
+
+            if (!stocks.length) {
+                container.innerHTML = '<div class="loading">暂无数据</div>';
+                return;
+            }
+
+            // 保存到全局用于编辑
+            window.currentStocks = stocks;
+
+            container.innerHTML = `
+                <table class="stock-table">
+                    <thead>
+                        <tr>
+                            <th style="width:3rem">#</th>
+                            <th style="width:6rem">股票</th>
+                            <th style="width:5.5rem">代码</th>
+                            <th>推荐人</th>
+                            <th style="width:4rem">涨跌幅</th>
+                            <th style="width:6rem">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${stocks.map((s, idx) => `
+                            <tr>
+                                <td style="color:var(--text-secondary)">${idx + 1}</td>
+                                <td>${s.stock_name || '-'}</td>
+                                <td>${s.market || ''}${s.stock_code || '-'}</td>
+                                <td>${(s.recommenders || []).join(', ')}</td>
+                                <td class="${(s.change_pct || 0) >= 0 ? 'positive' : 'negative'}">
+                                    ${s.change_pct != null ? s.change_pct.toFixed(2) + '%' : '-'}
+                                </td>
+                                <td>
+                                    <div class="action-btns">
+                                        <button class="btn btn-sm btn-primary" onclick="openEditModal(${idx})">编辑</button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteStock('${s.stock_name.replace(/'/g, "\\'")}')">删除</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // 保存原始文本
+        async function saveRawText() {
+            const rawText = document.getElementById('rawText').value;
+            if (!rawText) {
+                showStatus('error', '请输入原始文本');
+                return;
+            }
+
+            showStatus('info', '保存中...');
+
+            try {
+                const res = await fetch('/api/admin/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ year: currentYear, week: currentWeek, raw_text: rawText })
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    showStatus('error', data.error);
+                } else {
+                    showStatus('success', '保存成功');
+                    await loadWeekList();
+                }
+            } catch (e) {
+                showStatus('error', '保存失败: ' + e.message);
+            }
+        }
+
+        // Gemini解析
+        async function parseWithGemini() {
+            showStatus('info', 'Gemini解析中...');
+
+            try {
+                const res = await fetch('/api/admin/parse', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ year: currentYear, week: currentWeek })
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    showStatus('error', data.error);
+                } else {
+                    showStatus('success', `解析完成: ${data.data.stocks_count} 只股票`);
+                    await loadWeekData();
+                }
+            } catch (e) {
+                showStatus('error', '解析失败: ' + e.message);
+            }
+        }
+
+        // 填充代码
+        async function resolveCodes() {
+            showStatus('info', '填充股票代码中...');
+
+            try {
+                const res = await fetch('/api/admin/resolve-codes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ year: currentYear, week: currentWeek })
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    showStatus('error', data.error);
+                } else {
+                    showStatus('success', `填充完成: 成功${data.data.success}, 失败${data.data.error}`);
+                    await loadWeekData();
+                }
+            } catch (e) {
+                showStatus('error', '填充失败: ' + e.message);
+            }
+        }
+
+        // 获取K线
+        async function fetchKline() {
+            showStatus('info', '获取K线数据中...');
+
+            try {
+                const res = await fetch('/api/admin/fetch-kline', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ year: currentYear, week: currentWeek })
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    showStatus('error', data.error);
+                } else {
+                    showStatus('success', `获取完成: 成功${data.data.success}, 失败${data.data.error}`);
+                    await loadWeekData();
+                }
+            } catch (e) {
+                showStatus('error', '获取失败: ' + e.message);
+            }
+        }
+
+        // 重算统计
+        async function recalculateStats() {
+            showStatus('info', '重新计算统计中...');
+
+            try {
+                const res = await fetch('/api/admin/recalculate-stats', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    showStatus('error', data.error);
+                } else {
+                    showStatus('success', `统计完成: ${data.data.count} 位推荐人`);
+                }
+            } catch (e) {
+                showStatus('error', '计算失败: ' + e.message);
+            }
+        }
+
+        // 删除本周
+        async function deleteWeek() {
+            if (!confirm(`确定删除 ${currentYear} 年第 ${currentWeek} 周数据?`)) return;
+
+            showStatus('info', '删除中...');
+
+            try {
+                const res = await fetch('/api/admin/delete-week', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ year: currentYear, week: currentWeek })
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    showStatus('error', data.error);
+                } else {
+                    showStatus('success', '删除成功');
+                    await loadWeekList();
+                    await loadWeekData();
+                }
+            } catch (e) {
+                showStatus('error', '删除失败: ' + e.message);
+            }
+        }
+
+        // 状态显示
+        function showStatus(type, message) {
+            document.getElementById('statusArea').innerHTML = `
+                <div class="status ${type}">${message}</div>
+            `;
+        }
+
+        function clearStatus() {
+            document.getElementById('statusArea').innerHTML = '';
+        }
+
+        // ========== 编辑股票弹窗 ==========
+
+        // 根据股票代码自动选择市场
+        function autoSelectMarket(code) {
+            if (!code || code.length < 2) return;
+
+            const prefix = code.substring(0, 3);
+            const prefix2 = code.substring(0, 2);
+            let market = '';
+
+            // 上交所: 600/601/603/605 (主板), 688 (科创板)
+            if (/^(600|601|603|605|688)/.test(code)) {
+                market = 'SH';
+            }
+            // 深交所: 000/001/002 (主板), 300 (创业板)
+            else if (/^(000|001|002|003|300|301)/.test(code)) {
+                market = 'SZ';
+            }
+            // 北交所: 8xx, 43x
+            else if (/^(8|43)/.test(code)) {
+                market = 'BJ';
+            }
+
+            if (market) {
+                document.getElementById('editMarket').value = market;
+            }
+        }
+
+        // 猜一下：根据股票名称自动填充代码和市场
+        async function guessStockCode() {
+            const stockName = document.getElementById('editStockName').value.trim();
+            const statusEl = document.getElementById('editStatus');
+
+            if (!stockName) {
+                statusEl.innerHTML = '<span style="color:var(--danger-color)">请先输入股票名称</span>';
+                return;
+            }
+
+            statusEl.innerHTML = '搜索中...';
+
+            try {
+                const res = await fetch(`/api/admin/search-stock?name=${encodeURIComponent(stockName)}`);
+                const data = await res.json();
+
+                if (data.error) {
+                    statusEl.innerHTML = `<span style="color:var(--danger-color)">${data.error}</span>`;
+                } else if (data.data) {
+                    document.getElementById('editMarket').value = data.data.market || '';
+                    document.getElementById('editStockCode').value = data.data.code || '';
+                    if (data.data.name && data.data.name !== stockName) {
+                        document.getElementById('editStockName').value = data.data.name;
+                    }
+                    statusEl.innerHTML = `<span style="color:var(--success-color)">✓ ${data.data.market}${data.data.code} ${data.data.name || ''}</span>`;
+                } else {
+                    statusEl.innerHTML = '<span style="color:var(--danger-color)">未找到该股票</span>';
+                }
+            } catch (e) {
+                statusEl.innerHTML = `<span style="color:var(--danger-color)">搜索失败: ${e.message}</span>`;
+            }
+        }
+
+        function openEditModal(idx) {
+            const stock = window.currentStocks[idx];
+            if (!stock) return;
+
+            document.getElementById('editOldStockName').value = stock.stock_name || '';
+            document.getElementById('editStockName').value = stock.stock_name || '';
+            document.getElementById('editMarket').value = (stock.market || '').toUpperCase();
+            document.getElementById('editStockCode').value = stock.stock_code || '';
+            document.getElementById('editRecommenders').value = (stock.recommenders || []).join('\n');
+            document.getElementById('editStatus').innerHTML = '';
+
+            document.getElementById('editModal').classList.add('visible');
+        }
+
+        function closeEditModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('editModal').classList.remove('visible');
+        }
+
+        async function saveStockEdit() {
+            const oldStockName = document.getElementById('editOldStockName').value;
+            const newData = {
+                stock_name: document.getElementById('editStockName').value.trim(),
+                market: document.getElementById('editMarket').value,
+                stock_code: document.getElementById('editStockCode').value.trim(),
+                recommenders: document.getElementById('editRecommenders').value
+                    .split('\n')
+                    .map(s => s.trim())
+                    .filter(s => s)
+            };
+
+            if (!newData.stock_name) {
+                showStatus('error', '股票名称不能为空');
+                return;
+            }
+
+            showStatus('info', '保存中...');
+
+            try {
+                const res = await fetch('/api/admin/update-stock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        year: currentYear,
+                        week: currentWeek,
+                        old_stock_name: oldStockName,
+                        new_data: newData
+                    })
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    showStatus('error', data.error);
+                } else if (data.data.updated) {
+                    showStatus('success', '修改成功');
+                    closeEditModal();
+                    await loadWeekData();
+                } else {
+                    showStatus('error', '未找到该股票');
+                }
+            } catch (e) {
+                showStatus('error', '保存失败: ' + e.message);
+            }
+        }
+
+        async function deleteStock(stockName) {
+            if (!confirm(`确定删除股票「${stockName}」?`)) return;
+
+            showStatus('info', '删除中...');
+
+            try {
+                const res = await fetch('/api/admin/delete-stock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        year: currentYear,
+                        week: currentWeek,
+                        stock_name: stockName
+                    })
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    showStatus('error', data.error);
+                } else if (data.data.deleted) {
+                    showStatus('success', '删除成功');
+                    await loadWeekData();
+                } else {
+                    showStatus('error', '未找到该股票');
+                }
+            } catch (e) {
+                showStatus('error', '删除失败: ' + e.message);
+            }
+        }
+
+        // 启动
+        init();
+    </script>
+</body>
+
+</html>

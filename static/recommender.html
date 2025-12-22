@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>推荐人业绩 - Nebula</title>
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-color: #3b82f6;
+            --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            --success-color: #ef4444;
+            --danger-color: #22c55e;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --bg-gradient-1: rgba(59, 130, 246, 0.1);
+            --bg-gradient-2: rgba(16, 185, 129, 0.1);
+            --row-border: rgba(255, 255, 255, 0.05);
+            --row-hover: rgba(255, 255, 255, 0.03);
+            --header-bg: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f1f5f9;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --glass-border: 1px solid rgba(0, 0, 0, 0.1);
+            --bg-gradient-1: rgba(59, 130, 246, 0.05);
+            --bg-gradient-2: rgba(16, 185, 129, 0.05);
+            --row-border: rgba(0, 0, 0, 0.08);
+            --row-hover: rgba(0, 0, 0, 0.03);
+            --header-bg: rgba(0, 0, 0, 0.03);
+        }
+
+        html {
+            overscroll-behavior: none;
+            overflow: hidden;
+            height: 100%;
+            touch-action: manipulation;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            background-image:
+                radial-gradient(circle at 10% 20%, var(--bg-gradient-1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, var(--bg-gradient-2) 0%, transparent 40%);
+            color: var(--text-primary);
+            height: 100%;
+            overflow-y: auto;
+            overscroll-behavior: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .controls {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .theme-btn,
+        .nav-btn {
+            background: var(--card-bg);
+            border: var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .theme-btn:hover,
+        .nav-btn:hover {
+            color: var(--text-primary);
+            background: var(--bg-gradient-1);
+        }
+
+        .ranking-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: var(--glass-border);
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 2rem 4rem 1.2fr 0.6fr 0.7fr 0.7fr 0.7fr 0.7fr 0.7fr;
+            gap: 0.6rem;
+            padding: 0.75rem 1rem;
+            background: var(--header-bg);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .table-header> :nth-child(2) {
+            text-align: center;
+        }
+
+        .table-header .sortable {
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s;
+        }
+
+        .table-header .sortable:hover {
+            color: var(--accent-color);
+        }
+
+        .table-header .sortable.active {
+            color: var(--accent-color);
+        }
+
+        .table-header .sortable::after {
+            content: ' ↕';
+            opacity: 0.5;
+        }
+
+        .table-header .sortable.asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+
+        .table-header .sortable.desc::after {
+            content: ' ↓';
+            opacity: 1;
+        }
+
+        .ranking-list {
+            list-style: none;
+        }
+
+        .ranking-item {
+            display: grid;
+            grid-template-columns: 2rem 4rem 1.2fr 0.6fr 0.7fr 0.7fr 0.7fr 0.7fr 0.7fr;
+            gap: 0.6rem;
+            padding: 0.6rem 1rem;
+            border-bottom: 1px solid var(--row-border);
+            align-items: center;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        .ranking-item:hover {
+            background-color: var(--row-hover);
+        }
+
+        .ranking-item:nth-child(1) {
+            background: linear-gradient(90deg, rgba(251, 191, 36, 0.25) 0%, transparent 70%);
+            border-left: 4px solid #fbbf24;
+        }
+
+        .ranking-item:nth-child(2) {
+            background: linear-gradient(90deg, rgba(192, 192, 192, 0.2) 0%, transparent 70%);
+            border-left: 4px solid #c0c0c0;
+        }
+
+        .ranking-item:nth-child(3) {
+            background: linear-gradient(90deg, rgba(205, 127, 50, 0.2) 0%, transparent 70%);
+            border-left: 4px solid #cd7f32;
+        }
+
+        .rank-num {
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .ranking-item:nth-child(1) .rank-num {
+            color: #fbbf24;
+        }
+
+        .ranking-item:nth-child(2) .rank-num {
+            color: #94a3b8;
+        }
+
+        .ranking-item:nth-child(3) .rank-num {
+            color: #cd7f32;
+        }
+
+        .rating {
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 0.25rem;
+            display: inline-block;
+            text-align: center;
+            min-width: 1.5rem;
+        }
+
+        .rating-s {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #000;
+        }
+
+        .rating-a {
+            background: #22c55e;
+            color: #fff;
+        }
+
+        .rating-b {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .rating-c {
+            background: #6b7280;
+            color: #fff;
+        }
+
+        .rating-d {
+            background: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        /* Password Modal */
+        .password-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .password-modal {
+            background: var(--card-bg);
+            border: var(--glass-border);
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 320px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .password-modal h2 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .password-modal input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--text-secondary);
+            border-radius: 0.5rem;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .password-modal input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .password-modal button {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--accent-gradient);
+            border: none;
+            border-radius: 0.5rem;
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .password-modal button:hover {
+            opacity: 0.9;
+        }
+
+        .password-error {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        .name {
+            font-weight: 600;
+            color: #60a5fa;
+        }
+
+        .up {
+            color: var(--success-color);
+        }
+
+        .down {
+            color: var(--danger-color);
+        }
+
+        .high-rate {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .mid-rate {
+            color: #f97316;
+        }
+
+        .low-rate {
+            color: var(--text-secondary);
+        }
+
+        .loading,
+        .error {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--accent-color);
+            margin: 0 auto 1rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.visible {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: var(--glass-border);
+            border-radius: 1rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--row-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .modal-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            background: var(--header-bg);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 1.5rem;
+        }
+
+        .detail-table {
+            width: 100%;
+        }
+
+        .detail-row {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr 0.8fr;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--row-border);
+            font-size: 0.85rem;
+        }
+
+        .detail-row.header {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .detail-row .time-link {
+            color: var(--accent-color);
+            cursor: pointer;
+        }
+
+        .detail-row .time-link:hover {
+            color: var(--accent-color);
+            opacity: 0.7;
+        }
+
+        /* Custom Tooltip */
+        .custom-tooltip {
+            position: fixed;
+            background: rgba(30, 41, 59, 0.98);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            max-width: min(90vw, 320px);
+            z-index: 10001;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            line-height: 1.5;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            pointer-events: auto;
+        }
+
+        [data-theme="light"] .custom-tooltip {
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(100, 116, 139, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .custom-tooltip.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .tooltip-header {
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding-bottom: 0.4rem;
+            margin-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+            color: #94a3b8;
+        }
+
+        .tooltip-header::before {
+            content: '💬 ';
+        }
+
+        [data-theme="light"] .tooltip-header {
+            color: #64748b;
+            border-bottom-color: rgba(100, 116, 139, 0.15);
+        }
+
+        .tooltip-content {
+            color: #e2e8f0;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+        }
+
+        [data-theme="light"] .tooltip-content {
+            color: #334155;
+        }
+
+        .footer {
+            margin-top: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            .top-bar {
+                padding: 0.6rem 0.75rem;
+                background: var(--card-bg);
+                margin-bottom: 0;
+            }
+
+            h1 {
+                font-size: 1rem;
+            }
+
+            .subtitle {
+                display: none;
+            }
+
+            .table-header,
+            .ranking-item {
+                grid-template-columns: 1.5rem 2.5rem 1fr 4rem 4.5rem;
+                gap: 0.6rem;
+            }
+
+            .table-header> :nth-child(4),
+            .table-header> :nth-child(6),
+            .table-header> :nth-child(7),
+            .table-header> :nth-child(9),
+            .ranking-item> :nth-child(4),
+            .ranking-item> :nth-child(6),
+            .ranking-item> :nth-child(7),
+            .ranking-item> :nth-child(9) {
+                display: none;
+            }
+
+            .ranking-card {
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="top-bar">
+            <header>
+                <h1>📊 推荐人业绩</h1>
+                <div class="subtitle">Recommender Performance Tracking</div>
+            </header>
+            <div class="controls">
+                <a href="ranking.html" class="nav-btn" title="返回排行榜">📈</a>
+                <button class="nav-btn" onclick="showAlgorithmInfo()" title="评分算法说明">ℹ️</button>
+                <button class="theme-btn" onclick="toggleTheme()" title="切换主题">🌓</button>
+            </div>
+        </div>
+
+        <div class="ranking-card">
+            <div class="table-header">
+                <div>#</div>
+                <div>等级</div>
+                <div>推荐人</div>
+                <div>周 | 盈 | 总</div>
+                <div class="sortable" data-sort="win_rate" onclick="sortBy('win_rate')">胜率</div>
+                <div class="sortable" data-sort="weekly_win_rate" onclick="sortBy('weekly_win_rate')">正周率</div>
+                <div class="sortable" data-sort="avg_return" onclick="sortBy('avg_return')">周均</div>
+                <div class="sortable" data-sort="total_return" onclick="sortBy('total_return')">累计</div>
+                <div class="sortable active desc" data-sort="score" onclick="sortBy('score')">评分</div>
+            </div>
+
+            <div id="content">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <div>Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Data provided by Nebula Investment System</p>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="modal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 id="modalTitle">推荐人详情</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-stats" id="modalStats"></div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Custom Tooltip -->
+    <div id="customTooltip" class="custom-tooltip"></div>
+
+    <!-- Algorithm Info Modal -->
+    <div id="algoModal" class="modal-overlay" onclick="closeAlgoModal(event)">
+        <div class="modal" onclick="event.stopPropagation()" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>📐 评分算法说明</h2>
+                <button class="modal-close" onclick="closeAlgoModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="font-size: 0.85rem; line-height: 1.6;">
+                <h3 style="margin-top:0; color: var(--accent-color);">综合评分构成</h3>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:1rem;">
+                    <tr style="border-bottom:1px solid var(--border-color);">
+                        <th style="text-align:left; padding:0.4rem 0;">维度</th>
+                        <th style="text-align:right; padding:0.4rem 0;">权重</th>
+                        <th style="text-align:left; padding:0.4rem 0 0.4rem 1rem;">说明</th>
+                    </tr>
+                    <tr>
+                        <td>胜率</td>
+                        <td style="text-align:right">22%</td>
+                        <td style="padding-left:1rem">推荐股票盈利比例</td>
+                    </tr>
+                    <tr>
+                        <td>累计收益</td>
+                        <td style="text-align:right">23%</td>
+                        <td style="padding-left:1rem">净值累计增长率</td>
+                    </tr>
+                    <tr>
+                        <td>周均收益</td>
+                        <td style="text-align:right">15%</td>
+                        <td style="padding-left:1rem">每周平均收益率</td>
+                    </tr>
+                    <tr>
+                        <td>参与周数</td>
+                        <td style="text-align:right">10%</td>
+                        <td style="padding-left:1rem">活跃度，6周满分</td>
+                    </tr>
+                    <tr>
+                        <td>推荐数量</td>
+                        <td style="text-align:right">10%</td>
+                        <td style="padding-left:1rem">推荐量，15个满分</td>
+                    </tr>
+                    <tr>
+                        <td>正负周数</td>
+                        <td style="text-align:right">20%</td>
+                        <td style="padding-left:1rem">正收益周加分，负收益周扣分</td>
+                    </tr>
+                </table>
+
+                <h3 style="color: var(--accent-color);">数据置信度</h3>
+                <p style="margin:0.5rem 0;">周数不足时，分数向50分（中性）靠拢：</p>
+                <ul style="margin:0.3rem 0 1rem; padding-left:1.2rem;">
+                    <li>2周及以上：100%置信度</li>
+                    <li>1周：50%置信度（分数折半偏向50）</li>
+                </ul>
+
+                <h3 style="color: var(--accent-color);">等级划分</h3>
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                    <span class="rating rating-s" style="padding:0.2rem 0.6rem;">S ≥80</span>
+                    <span class="rating rating-a" style="padding:0.2rem 0.6rem;">A ≥65</span>
+                    <span class="rating rating-b" style="padding:0.2rem 0.6rem;">B ≥45</span>
+                    <span class="rating rating-c" style="padding:0.2rem 0.6rem;">C ≥25</span>
+                    <span class="rating rating-d" style="padding:0.2rem 0.6rem;">D &lt;25</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div id="passwordOverlay" class="password-overlay" style="display: none;">
+        <div class="password-modal">
+            <h2>🔐 请输入访问密码</h2>
+            <input type="password" id="passwordInput" placeholder="密码"
+                onkeypress="if(event.key==='Enter')verifyPassword()">
+            <button onclick="verifyPassword()">确认</button>
+            <div id="passwordError" class="password-error" style="display: none;">密码错误</div>
+        </div>
+    </div>
+
+    <script>
+        // Password Protection
+        const ENCRYPTED_PWD = 'bmVidWxh';
+        const AUTH_KEY = 'nebula_recommender_auth';
+
+        function checkAuth() {
+            const auth = localStorage.getItem(AUTH_KEY);
+            if (auth === 'verified') {
+                return true;
+            }
+            document.getElementById('passwordOverlay').style.display = 'flex';
+            return false;
+        }
+
+        function verifyPassword() {
+            const input = document.getElementById('passwordInput').value;
+            const encoded = btoa(input);
+            if (encoded === ENCRYPTED_PWD) {
+                localStorage.setItem(AUTH_KEY, 'verified');
+                document.getElementById('passwordOverlay').style.display = 'none';
+                fetchData();
+            } else {
+                document.getElementById('passwordError').style.display = 'block';
+                document.getElementById('passwordInput').value = '';
+            }
+        }
+
+        // Theme
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', next === 'dark' ? '' : next);
+            localStorage.setItem('theme', next);
+        }
+
+        (function () {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+
+        // State
+        let recommenderData = [];
+        let currentSort = { field: 'total_return', order: 'desc' };
+
+        function getRatingClass(rating) {
+            const classes = { 'S': 'rating-s', 'A': 'rating-a', 'B': 'rating-b', 'C': 'rating-c', 'D': 'rating-d' };
+            return classes[rating] || 'rating-d';
+        }
+
+        // Algorithm Info Modal
+        function showAlgorithmInfo() {
+            document.getElementById('algoModal').classList.add('visible');
+        }
+        function closeAlgoModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('algoModal').classList.remove('visible');
+        }
+
+        // Sorting
+        function sortBy(field) {
+            // Toggle order if same field, else default to desc
+            if (currentSort.field === field) {
+                currentSort.order = currentSort.order === 'desc' ? 'asc' : 'desc';
+            } else {
+                currentSort.field = field;
+                currentSort.order = 'desc';
+            }
+
+            // Update header UI
+            document.querySelectorAll('.table-header .sortable').forEach(el => {
+                el.classList.remove('active', 'asc', 'desc');
+                if (el.dataset.sort === field) {
+                    el.classList.add('active', currentSort.order);
+                }
+            });
+
+            // Sort and re-render
+            const sorted = [...recommenderData].sort((a, b) => {
+                const aVal = a[field] || 0;
+                const bVal = b[field] || 0;
+                return currentSort.order === 'desc' ? bVal - aVal : aVal - bVal;
+            });
+            renderData(sorted);
+        }
+
+        // Formatters
+        function formatPercent(val) {
+            if (val === null || val === undefined) return '-';
+            const sign = val >= 0 ? '+' : '';
+            return `${sign}${val.toFixed(2)}%`;
+        }
+
+        function getChangeClass(val) {
+            if (val === null || val === undefined || val === 0) return '';
+            return val > 0 ? 'up' : 'down';
+        }
+
+        function getWinRateClass(rate) {
+            if (rate >= 60) return 'high-rate';
+            if (rate >= 50) return 'mid-rate';
+            return 'low-rate';
+        }
+
+        // Modal with tabs
+        let currentTab = 'stocks';
+        let currentModalData = null;
+
+        function openModal(recommender) {
+            currentModalData = recommender;
+            const modal = document.getElementById('modal');
+            document.getElementById('modalTitle').textContent = `${recommender.name} 的推荐记录`;
+
+            document.getElementById('modalStats').innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-value ${getWinRateClass(recommender.win_rate)}">${recommender.win_rate.toFixed(1)}%</div>
+                    <div class="stat-label">胜率</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value ${getChangeClass(recommender.avg_return)}">${formatPercent(recommender.avg_return)}</div>
+                    <div class="stat-label">平均收益</div>
+                </div>
+                <div class="stat-item" style="cursor:pointer" onclick="switchTab('weekly')">
+                    <div class="stat-value ${getChangeClass(recommender.total_return)}">${formatPercent(recommender.total_return)}</div>
+                    <div class="stat-label">累计收益 📊</div>
+                </div>
+            `;
+
+            currentTab = 'stocks';
+            renderModalBody(recommender);
+            modal.classList.add('visible');
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            if (currentModalData) {
+                renderModalBody(currentModalData);
+            }
+        }
+
+        function renderModalBody(recommender) {
+            const tabButtons = `
+                <div style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
+                    <button onclick="switchTab('stocks')" style="padding:0.3rem 0.75rem; border-radius:1rem; border:none; cursor:pointer; font-size:0.8rem; ${currentTab === 'stocks' ? 'background:var(--accent-color); color:white;' : 'background:var(--header-bg); color:var(--text-secondary);'}">
+                        股票明细
+                    </button>
+                    <button onclick="switchTab('weekly')" style="padding:0.3rem 0.75rem; border-radius:1rem; border:none; cursor:pointer; font-size:0.8rem; ${currentTab === 'weekly' ? 'background:var(--accent-color); color:white;' : 'background:var(--header-bg); color:var(--text-secondary);'}">
+                        每周收益
+                    </button>
+                </div>
+            `;
+
+            let contentHtml = '';
+
+            if (currentTab === 'stocks') {
+                const details = recommender.details || [];
+                contentHtml = `<div class="detail-row header"><div>时间</div><div>股票</div><div>涨跌幅</div></div>`;
+                let lastWeekKey = '';
+                details.forEach(d => {
+                    const weekKey = `${d.year}-${d.week}`;
+                    const showTime = weekKey !== lastWeekKey;
+                    lastWeekKey = weekKey;
+                    contentHtml += `
+                        <div class="detail-row">
+                            <div class="${showTime ? 'time-link' : ''}" ${showTime ? `data-year="${d.year}" data-week="${d.week}" data-name="${recommender.name}"` : ''}>${showTime ? `${d.year}年 第${d.week}周` : ''}</div>
+                            <div>${d.stock_name}</div>
+                            <div class="${getChangeClass(d.change_pct)}">${formatPercent(d.change_pct)}</div>
+                        </div>
+                    `;
+                });
+            } else {
+                const weekly = recommender.weekly_returns || [];
+                contentHtml = `<div class="detail-row header"><div>时间</div><div>周收益</div><div>净值</div></div>`;
+                weekly.forEach(w => {
+                    contentHtml += `
+                        <div class="detail-row">
+                            <div class="time-link" data-year="${w.year}" data-week="${w.week}" data-name="${recommender.name}">${w.year}年 第${w.week}周</div>
+                            <div class="${getChangeClass(w.return)}">${formatPercent(w.return)}</div>
+                            <div>${w.net_value.toFixed(4)}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('modalBody').innerHTML = tabButtons + `<div class="detail-table">${contentHtml}</div>`;
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('modal').classList.remove('visible');
+        }
+
+        // Fetch
+        async function fetchData() {
+            const content = document.getElementById('content');
+            content.innerHTML = `<div class="loading"><div class="loading-spinner"></div><div>Loading...</div></div>`;
+
+            try {
+                const response = await fetch('/api/recommendation/recommenders');
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+
+                const result = await response.json();
+                // Flask API不返回errcode，直接处理data
+                const apiData = result.data || result;
+
+                recommenderData = apiData.recommenders || apiData || [];
+                renderData(recommenderData);
+
+            } catch (error) {
+                console.error(error);
+                content.innerHTML = `
+                    <div class="error">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
+                        <div>Failed to load data</div>
+                        <div style="font-size: 0.85rem; opacity: 0.7; margin-top: 0.5rem;">${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderData(data) {
+            const content = document.getElementById('content');
+
+            if (!data || data.length === 0) {
+                content.innerHTML = `
+                    <div class="error">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📭</div>
+                        <div>暂无数据</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const list = document.createElement('ul');
+            list.className = 'ranking-list';
+
+            data.forEach((r, index) => {
+                const li = document.createElement('li');
+                li.className = 'ranking-item';
+                li.onclick = () => openModal(r);
+
+                li.innerHTML = `
+                    <div class="rank-num">${index + 1}</div>
+                    <div class="rating ${getRatingClass(r.rating)}">${r.rating || 'D'}</div>
+                    <div class="name">${r.name}</div>
+                    <div>${r.weekly_returns?.length || 0} | ${r.win_count} | ${r.total_count}</div>
+                    <div class="${getWinRateClass(r.win_rate)}">${r.win_rate.toFixed(1)}%</div>
+                    <div class="${getWinRateClass(r.weekly_win_rate || 0)}">${(r.weekly_win_rate || 0).toFixed(1)}%</div>
+                    <div class="${getChangeClass(r.avg_return)}">${formatPercent(r.avg_return)}</div>
+                    <div class="${getChangeClass(r.total_return)}">${formatPercent(r.total_return)}</div>
+                    <div style="color: var(--accent-color); font-weight: 600;">${r.score?.toFixed(1) || '-'}</div>
+                `;
+                list.appendChild(li);
+            });
+
+            content.innerHTML = '';
+            content.appendChild(list);
+        }
+
+        // Init
+        if (checkAuth()) {
+            fetchData();
+        }
+
+        // Custom Tooltip handling
+        const customTooltip = document.getElementById('customTooltip');
+        let currentTimeLink = null;
+        const weekRawTextCache = {}; // 缓存已加载的原始正文
+
+        function isMobile() {
+            return window.innerWidth <= 768;
+        }
+
+        function positionTooltip(element) {
+            const rect = element.getBoundingClientRect();
+            if (isMobile()) {
+                customTooltip.style.top = '50%';
+                customTooltip.style.left = '50%';
+                customTooltip.style.transform = 'translate(-50%, -50%)';
+            } else {
+                const tooltipHeight = customTooltip.offsetHeight || 100;
+                let top = rect.top - tooltipHeight - 8;
+                let left = rect.left + rect.width / 2;
+                if (top < 10) top = rect.bottom + 8;
+                const tooltipWidth = customTooltip.offsetWidth || 320;
+                if (left - tooltipWidth / 2 < 10) left = tooltipWidth / 2 + 10;
+                else if (left + tooltipWidth / 2 > window.innerWidth - 10) left = window.innerWidth - tooltipWidth / 2 - 10;
+                customTooltip.style.top = `${top}px`;
+                customTooltip.style.left = `${left}px`;
+                customTooltip.style.transform = 'translateX(-50%)';
+            }
+        }
+
+        async function loadWeekRawText(year, week, recommenderName) {
+            const cacheKey = `${year}-${week}`;
+            let messages = weekRawTextCache[cacheKey];
+            if (!messages) {
+                try {
+                    const res = await fetch(`/api/recommendation/${year}/${week}/ranking`);
+                    const data = await res.json();
+                    messages = data.data?.recommender_messages || {};
+                    weekRawTextCache[cacheKey] = messages;
+                } catch (e) {
+                    return '加载失败';
+                }
+            }
+            return messages[recommenderName] || '';
+        }
+
+        // 监听 modalBody 的点击事件
+        document.getElementById('modalBody').addEventListener('click', async (e) => {
+            const timeLink = e.target.closest('.time-link');
+            if (timeLink) {
+                e.stopPropagation();
+                const year = timeLink.dataset.year;
+                const week = timeLink.dataset.week;
+                const name = timeLink.dataset.name;
+
+                if (currentTimeLink === timeLink && customTooltip.classList.contains('visible')) {
+                    customTooltip.classList.remove('visible');
+                    currentTimeLink = null;
+                } else {
+                    // 显示loading
+                    customTooltip.innerHTML = `
+                        <div class="tooltip-header">${name} - ${year}年第${week}周</div>
+                        <div class="tooltip-content">Loading...</div>
+                    `;
+                    customTooltip.classList.add('visible');
+                    positionTooltip(timeLink);
+                    currentTimeLink = timeLink;
+
+                    // 加载推荐人原文
+                    const msg = await loadWeekRawText(year, week, name);
+                    if (msg) {
+                        customTooltip.innerHTML = `
+                            <div class="tooltip-header">${name} - ${year}年第${week}周</div>
+                            <div class="tooltip-content">${msg}</div>
+                        `;
+                    } else {
+                        customTooltip.innerHTML = `
+                            <div class="tooltip-header">${name} - ${year}年第${week}周</div>
+                            <div class="tooltip-content">暂无原文数据</div>
+                        `;
+                    }
+                    positionTooltip(timeLink);
+                }
+            }
+        });
+
+        // 点击其他区域关闭tooltip（包括modal内部）
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.custom-tooltip') && !e.target.closest('.time-link')) {
+                customTooltip.classList.remove('visible');
+                currentTimeLink = null;
+            }
+        });
+
+        // modal内部点击也关闭tooltip（因为modal有stopPropagation）
+        document.querySelector('.modal').addEventListener('click', (e) => {
+            if (!e.target.closest('.custom-tooltip') && !e.target.closest('.time-link')) {
+                customTooltip.classList.remove('visible');
+                currentTimeLink = null;
+            }
+        });
+
+        // 阻止 iOS Safari 双指缩放
+        document.addEventListener('gesturestart', (e) => e.preventDefault());
+        document.addEventListener('gesturechange', (e) => e.preventDefault());
+        document.addEventListener('gestureend', (e) => e.preventDefault());
+
+        // 阻止双击缩放
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, { passive: false });
+    </script>
+</body>
+
+</html>

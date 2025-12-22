@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📈 股票跟踪</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #30363d;
+            --primary-color: #3b82f6;
+            --accent-color: #58a6ff;
+            --success-color: #3fb950;
+            --danger-color: #f85149;
+            --warning-color: #d29922;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --bg-gradient-1: rgba(59, 130, 246, 0.1);
+            --bg-gradient-2: rgba(16, 185, 129, 0.1);
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f1f5f9;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border-color: rgba(0, 0, 0, 0.1);
+            --glass-border: 1px solid rgba(0, 0, 0, 0.1);
+            --bg-gradient-1: rgba(59, 130, 246, 0.05);
+            --bg-gradient-2: rgba(16, 185, 129, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            background-image:
+                radial-gradient(circle at 10% 20%, var(--bg-gradient-1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, var(--bg-gradient-2) 0%, transparent 40%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 1.5rem 1rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        header {
+            text-align: left;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.025em;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .controls {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .search-box {
+            padding: 0.5rem 0.75rem;
+            background: var(--card-bg);
+            border: var(--glass-border);
+            border-radius: 0.375rem;
+            color: var(--text-primary);
+            width: 150px;
+            font-size: 0.85rem;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .nav-btn {
+            background: var(--card-bg);
+            border: var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: var(--bg-gradient-1);
+        }
+
+        .nav-btn.danger {
+            background: rgba(248, 113, 113, 0.15);
+            border-color: rgba(248, 113, 113, 0.3);
+            color: #f87171;
+        }
+
+        .nav-btn.danger:hover {
+            background: rgba(248, 113, 113, 0.25);
+        }
+
+        .nav-btn.primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border: none;
+            color: white;
+        }
+
+        .nav-btn.primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .stock-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .stock-table th,
+        .stock-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stock-table th {
+            background: var(--bg-tertiary);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .stock-table tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .stock-table tr {
+            cursor: pointer;
+        }
+
+        .market-tag {
+            display: inline-block;
+            padding: 0.125rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .market-SH {
+            background: #1a3a5c;
+            color: #58a6ff;
+        }
+
+        .market-SZ {
+            background: #3a1a4c;
+            color: #bc8cff;
+        }
+
+        .market-BJ {
+            background: #3a3a1a;
+            color: #d29922;
+        }
+
+        .market-HK {
+            background: #1a3a3a;
+            color: #56d4dd;
+        }
+
+        .rec-count {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        /* 弹窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.visible {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            width: 90%;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal h2 {
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .modal-close {
+            float: right;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .rec-list {
+            list-style: none;
+        }
+
+        .rec-item {
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        }
+
+        .rec-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .rec-time {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .rec-recommender {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .rec-reason {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 0.75rem;
+            text-align: center;
+            font-size: 0.875rem;
+            z-index: 999;
+            display: none;
+        }
+
+        .status-bar.visible {
+            display: block;
+        }
+
+        .status-bar.success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .status-bar.error {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .status-bar.info {
+            background: var(--accent-color);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="top-bar">
+            <header>
+                <h1>STOCK TRACKING</h1>
+            </header>
+            <div class="controls">
+                <input type="text" class="search-box" id="searchInput" placeholder="搜索..." oninput="filterStocks()">
+                <button class="nav-btn" onclick="toggleTheme()" title="切换主题">🌓</button>
+                <button class="nav-btn primary" onclick="syncTracking()">🔄 同步</button>
+                <button class="nav-btn danger" onclick="clearTracking()">🗑️ 清空</button>
+            </div>
+        </div>
+
+        <!-- 周同步状态 -->
+        <div id="weekStatus" style="margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:0.5rem;"></div>
+
+        <div id="stockList">
+            <div class="loading">加载中...</div>
+        </div>
+    </div>
+
+    <!-- 详情弹窗 -->
+    <div id="detailModal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <h2 id="modalTitle">股票详情</h2>
+            <ul class="rec-list" id="recList"></ul>
+        </div>
+    </div>
+
+    <!-- 状态栏 -->
+    <div id="statusBar" class="status-bar"></div>
+
+    <script>
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', next === 'dark' ? '' : next);
+            localStorage.setItem('theme', next);
+        }
+
+        // 初始化主题
+        (function () {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+
+        let allStocks = [];
+        let displayedStocks = []; // 当前显示的股票列表（可能已排序/筛选）
+
+        async function loadStocks() {
+            try {
+                const res = await fetch('/api/stock-tracking');
+                const data = await res.json();
+                allStocks = data.data?.stocks || [];
+                renderStocks(allStocks);
+            } catch (e) {
+                showStatus('error', '加载失败: ' + e.message);
+            }
+        }
+
+        async function loadWeekStatus() {
+            try {
+                const res = await fetch('/api/admin/weeks');
+                const data = await res.json();
+                const weeks = data.data || [];
+                renderWeekStatus(weeks);
+            } catch (e) {
+                console.error('加载周状态失败:', e);
+            }
+        }
+
+        function renderWeekStatus(weeks) {
+            const container = document.getElementById('weekStatus');
+            if (!weeks.length) {
+                container.innerHTML = '<span style="color:var(--text-secondary)">无周数据</span>';
+                return;
+            }
+
+            container.innerHTML = weeks.map(w => {
+                const synced = w.tracking_synced;
+                const bg = synced ? 'var(--success-color)' : 'var(--bg-tertiary)';
+                const color = synced ? 'white' : 'var(--text-secondary)';
+                const icon = synced ? '✓' : '○';
+                const cursor = synced ? 'pointer' : 'default';
+                const title = synced ? '点击重置同步状态' : '';
+                return `<span onclick="resetWeekSync(${w.year}, ${w.week})" style="padding:0.25rem 0.5rem;border-radius:4px;font-size:0.75rem;background:${bg};color:${color};cursor:${cursor}" title="${title}">${icon} ${w.year}W${w.week}</span>`;
+            }).join('');
+        }
+
+        let currentSort = { field: 'count', order: 'desc' };
+
+        function renderStocks(stocks) {
+            displayedStocks = stocks; // 保存当前显示的列表
+            const container = document.getElementById('stockList');
+
+            if (!stocks.length) {
+                container.innerHTML = '<div class="loading">暂无数据，请先点击"同步数据"</div>';
+                return;
+            }
+
+            const sortIcon = (field) => {
+                if (currentSort.field !== field) return '⇅';
+                return currentSort.order === 'desc' ? '↓' : '↑';
+            };
+
+            container.innerHTML = `
+                <table class="stock-table">
+                    <thead>
+                        <tr>
+                            <th>市场</th>
+                            <th>代码</th>
+                            <th>名称</th>
+                            <th style="cursor:pointer" onclick="sortBy('count')">推荐次数 ${sortIcon('count')}</th>
+                            <th style="cursor:pointer" onclick="sortBy('time')">最近推荐 ${sortIcon('time')}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${stocks.map((s, i) => {
+                const recs = s.recommendations || [];
+                const lastRec = recs.length > 0 ? recs.sort((a, b) => b.time.localeCompare(a.time))[0] : null;
+                return `
+                                <tr onclick="showDetail(${i})">
+                                    <td><span class="market-tag market-${s.market}">${s.market}</span></td>
+                                    <td>${s.stock_code}</td>
+                                    <td>${s.stock_name || '-'}</td>
+                                    <td><span class="rec-count">${recs.length}</span></td>
+                                    <td>${lastRec ? lastRec.time : '-'}</td>
+                                </tr>
+                            `;
+            }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function sortBy(field) {
+            if (currentSort.field === field) {
+                currentSort.order = currentSort.order === 'desc' ? 'asc' : 'desc';
+            } else {
+                currentSort.field = field;
+                currentSort.order = 'desc';
+            }
+
+            const sorted = [...allStocks].sort((a, b) => {
+                let valA, valB;
+                if (field === 'count') {
+                    valA = (a.recommendations || []).length;
+                    valB = (b.recommendations || []).length;
+                } else if (field === 'time') {
+                    const recsA = (a.recommendations || []).sort((x, y) => y.time.localeCompare(x.time));
+                    const recsB = (b.recommendations || []).sort((x, y) => y.time.localeCompare(x.time));
+                    valA = recsA.length > 0 ? recsA[0].time : '';
+                    valB = recsB.length > 0 ? recsB[0].time : '';
+                }
+                if (valA < valB) return currentSort.order === 'desc' ? 1 : -1;
+                if (valA > valB) return currentSort.order === 'desc' ? -1 : 1;
+                return 0;
+            });
+
+            renderStocks(sorted);
+        }
+
+        function filterStocks() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allStocks.filter(s =>
+                (s.stock_name || '').toLowerCase().includes(keyword) ||
+                (s.stock_code || '').includes(keyword)
+            );
+            renderStocks(filtered);
+        }
+
+        function showDetail(idx) {
+            const stock = displayedStocks[idx]; // 使用当前显示的列表
+            if (!stock) return;
+
+            document.getElementById('modalTitle').textContent =
+                `${stock.market}.${stock.stock_code} ${stock.stock_name || ''}`;
+
+            const recs = stock.recommendations || [];
+            const recList = document.getElementById('recList');
+
+            if (!recs.length) {
+                recList.innerHTML = '<li class="rec-item">暂无推荐记录</li>';
+            } else {
+                // 按时间分组
+                const groups = {};
+                recs.forEach(r => {
+                    const time = r.time || '未知';
+                    if (!groups[time]) groups[time] = [];
+                    groups[time].push(r);
+                });
+
+                // 按时间倒序排列
+                const sortedTimes = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+
+                recList.innerHTML = sortedTimes.map((time, idx) => {
+                    const items = groups[time];
+                    const isFirst = idx === 0;
+                    const names = items.map(r => r.recommender).join(', ');
+                    return `
+                        <li class="time-group" style="margin-bottom:0.75rem;border:1px solid var(--border-color);border-radius:6px;overflow:hidden">
+                            <div class="time-header" onclick="toggleGroup(this)" style="cursor:pointer;display:flex;align-items:center;padding:0.6rem 0.75rem;background:linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);gap:0.75rem">
+                                <span style="color:var(--primary-color);font-weight:600;min-width:5.5rem;font-size:0.9rem">${time}</span>
+                                <span class="names-preview" style="flex:1;color:var(--text-secondary);font-size:0.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:${isFirst ? 'none' : 'block'}">${names}</span>
+                                <span style="color:var(--text-muted);font-size:0.75rem;background:var(--bg-primary);padding:0.15rem 0.4rem;border-radius:10px;margin-left:auto">${items.length}条 ${isFirst ? '▼' : '▶'}</span>
+                            </div>
+                            <div class="time-items" style="display:${isFirst ? 'block' : 'none'};padding:0.5rem 0.75rem;background:var(--bg-secondary)">
+                                ${items.map(r => `
+                                    <div style="display:flex;padding:0.35rem 0;font-size:0.85rem;gap:0.75rem;border-bottom:1px solid var(--border-color)">
+                                        <span style="color:var(--primary-color);font-weight:500;min-width:5rem">${r.recommender}</span>
+                                        <span style="color:var(--text-secondary);flex:1">${r.reason || '-'}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </li>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('detailModal').classList.add('visible');
+        }
+
+        function toggleGroup(header) {
+            const items = header.nextElementSibling;
+            const arrow = header.querySelector('span:last-child');
+            const preview = header.querySelector('.names-preview');
+            if (items.style.display === 'none') {
+                items.style.display = 'block';
+                if (preview) preview.style.display = 'none';
+                arrow.textContent = arrow.textContent.replace('▶', '▼');
+            } else {
+                items.style.display = 'none';
+                if (preview) preview.style.display = 'block';
+                arrow.textContent = arrow.textContent.replace('▼', '▶');
+            }
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('detailModal').classList.remove('visible');
+        }
+
+        async function syncTracking() {
+            showStatus('info', '同步中...');
+            try {
+                const res = await fetch('/api/admin/sync-tracking', { method: 'POST' });
+                const data = await res.json();
+                if (data.data) {
+                    showStatus('success', `同步完成: ${data.data.weeks} 周, ${data.data.synced} 条记录`);
+                    loadStocks();
+                    loadWeekStatus();
+                } else {
+                    showStatus('error', '同步失败');
+                }
+            } catch (e) {
+                showStatus('error', '同步失败: ' + e.message);
+            }
+        }
+
+        async function clearTracking() {
+            if (!confirm('确定要清空所有股票跟踪数据吗？')) return;
+
+            showStatus('info', '清空中...');
+            try {
+                const res = await fetch('/api/admin/clear-tracking', { method: 'POST' });
+                const data = await res.json();
+                if (data.data) {
+                    showStatus('success', `已清空 ${data.data.deleted} 条记录`);
+                    loadStocks();
+                } else {
+                    showStatus('error', '清空失败');
+                }
+            } catch (e) {
+                showStatus('error', '清空失败: ' + e.message);
+            }
+        }
+
+        async function resetWeekSync(year, week) {
+            if (!confirm(`确定要重置 ${year}年第${week}周 的同步状态吗？`)) return;
+
+            try {
+                const res = await fetch(`/api/admin/reset-week-sync/${year}/${week}`, { method: 'POST' });
+                const data = await res.json();
+                if (data.data?.success) {
+                    showStatus('success', `已重置 ${year}W${week} 同步状态`);
+                    loadWeekStatus();
+                } else {
+                    showStatus('error', '重置失败');
+                }
+            } catch (e) {
+                showStatus('error', '重置失败: ' + e.message);
+            }
+        }
+
+        function showStatus(type, msg) {
+            const bar = document.getElementById('statusBar');
+            bar.className = `status-bar visible ${type}`;
+            bar.textContent = msg;
+            setTimeout(() => bar.classList.remove('visible'), 3000);
+        }
+
+        // 初始化
+        loadStocks();
+        loadWeekStatus();
+    </script>
+</body>
+
+</html>
