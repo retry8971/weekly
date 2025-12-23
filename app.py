@@ -45,7 +45,7 @@ def get_recommenders():
 @app.route('/api/admin/weeks', methods=['GET'])
 def get_weeks():
     """获取所有周列表"""
-    from services.excel_db import get_db
+    from services.mongodb_db import get_db
     db = get_db()
     weeks = db.get_all_weeks()
     return jsonify({'data': weeks})
@@ -54,7 +54,7 @@ def get_weeks():
 @app.route('/api/admin/week/<int:year>/<int:week>', methods=['GET'])
 def get_week_detail(year, week):
     """获取周详情"""
-    from services.excel_db import get_db
+    from services.mongodb_db import get_db
     db = get_db()
     data = db.get_week_data(year, week)
     return jsonify({'data': data})
@@ -143,7 +143,7 @@ def delete_week():
     if not year or not week:
         return jsonify({'error': '缺少年份或周数'}), 400
     
-    from services.excel_db import get_db
+    from services.mongodb_db import get_db
     db = get_db()
     success = db.delete_week(year, week)
     return jsonify({'data': {'deleted': success}})
@@ -160,7 +160,7 @@ def delete_stock():
     if not year or not week or not stock_name:
         return jsonify({'error': '缺少必要参数'}), 400
     
-    from services.excel_db import get_db
+    from services.mongodb_db import get_db
     db = get_db()
     success = db.delete_stock(year, week, stock_name)
     return jsonify({'data': {'deleted': success}})
@@ -178,7 +178,7 @@ def update_stock():
     if not year or not week or not old_stock_name:
         return jsonify({'error': '缺少必要参数'}), 400
     
-    from services.excel_db import get_db
+    from services.mongodb_db import get_db
     db = get_db()
     success = db.update_stock_full(year, week, old_stock_name, new_data)
     return jsonify({'data': {'updated': success}})

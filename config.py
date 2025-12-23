@@ -10,17 +10,13 @@ DEBUG = True
 HOST = '0.0.0.0'
 PORT = 5001
 
-# 数据源配置: 'excel' 或 'mongodb'
-DATA_SOURCE = os.getenv('DATA_SOURCE', 'mongodb')
-
-# Excel数据目录
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, 'data')
-EXCEL_FILE = os.path.join(DATA_DIR, 'recommendations.xlsx')
-
 # MongoDB配置
 MONGODB_URI = os.getenv('MONGODB_URI', '')
 MONGODB_DB = os.getenv('MONGODB_DB', '')
+
+# Excel配置 (已废弃，保留 BASE_DIR/DATA_DIR 供其他用途)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, 'data')
 
 # Gemini API配置（调用主系统）
 GEMINI_API_URL = os.getenv('GEMINI_API_URL', '')

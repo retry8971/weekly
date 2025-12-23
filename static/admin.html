@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>股票推荐管理</title>
     <style>
         :root {
@@ -38,15 +38,41 @@
             padding: 0;
         }
 
+        /* Hide number input spinners */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        html {
+            overscroll-behavior: none;
+            overflow: hidden;
+            height: 100%;
+            touch-action: manipulation;
+            background-color: var(--bg-color);
+        }
+
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background-color: var(--bg-color);
             background-image:
                 radial-gradient(circle at 10% 20%, var(--bg-gradient-1) 0%, transparent 40%),
                 radial-gradient(circle at 90% 80%, var(--bg-gradient-2) 0%, transparent 40%);
+            background-attachment: fixed;
             color: var(--text-primary);
-            min-height: 100vh;
+            height: 100%;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             padding: 1.5rem 1rem;
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: touch;
         }
 
         .container {
@@ -369,6 +395,35 @@
                 flex-direction: column;
             }
 
+            /* 优化周选择布局 */
+            .form-row.week-select-row {
+                flex-direction: row;
+                align-items: flex-end;
+                gap: 0.5rem;
+            }
+
+            .week-select-row .form-group {
+                flex: 0 0 auto;
+            }
+
+            .week-select-row .form-group label {
+                font-size: 0.75rem;
+            }
+
+            .week-select-row button {
+                padding: 0.5rem 0.8rem;
+            }
+
+            /* 弹窗优化 */
+            .stock-code-row {
+                flex-direction: row !important;
+                gap: 0.5rem;
+            }
+
+            .stock-code-row .form-group label {
+                font-size: 0.75rem;
+            }
+
             .btn-group {
                 flex-direction: column;
             }
@@ -377,7 +432,7 @@
                 width: 100%;
             }
 
-            /* 移动端卡片式布局 */
+            /* 移动端卡片式布局 - 紧凑版 */
             .stock-table {
                 display: block;
                 margin-top: 0.5rem;
@@ -385,29 +440,27 @@
 
             .stock-table thead {
                 display: none !important;
-                height: 0;
-                overflow: hidden;
             }
 
             .stock-table tbody {
                 display: flex;
                 flex-direction: column;
-                gap: 0.75rem;
+                gap: 0.5rem;
             }
 
             .stock-table tr {
-                display: grid;
-                grid-template-columns: 1fr auto;
-                grid-template-rows: auto auto auto;
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
                 padding: 0.75rem;
                 background: var(--card-bg);
                 border: 1px solid var(--border-color);
                 border-radius: 8px;
-                gap: 0.25rem 0.5rem;
+                position: relative;
             }
 
             .stock-table td {
-                border-bottom: none;
+                border: none;
                 padding: 0;
                 white-space: normal;
             }
@@ -417,57 +470,71 @@
                 display: none;
             }
 
-            /* 股票名称 - 第1行左 */
+            /* 股票名称 */
             .stock-table td:nth-child(2) {
+                order: 1;
                 font-weight: 600;
                 font-size: 1rem;
-                grid-column: 1;
-                grid-row: 1;
+                color: var(--text-primary);
+                margin-right: 0.5rem;
             }
 
-            /* 代码 - 第1行左(紧跟名称) */
+            /* 代码 */
             .stock-table td:nth-child(3) {
-                color: var(--text-secondary);
+                order: 2;
+                display: inline-block !important;
+                /* 强制显示 */
                 font-size: 0.85rem;
-                grid-column: 1;
-                grid-row: 1;
-                margin-left: auto;
-                display: none;
-            }
-
-            /* 推荐人 - 第2行 */
-            .stock-table td:nth-child(4) {
-                grid-column: 1 / -1;
-                grid-row: 2;
-                font-size: 0.8rem;
                 color: var(--text-secondary);
             }
 
-            /* 涨跌幅 - 第1行右 */
+            /* 涨跌幅 - 放到右侧，但在按钮左边 */
             .stock-table td:nth-child(5) {
+                order: 3;
+                margin-left: auto;
+                margin-right: 0.5rem;
                 font-weight: 600;
                 font-size: 0.9rem;
-                grid-column: 2;
-                grid-row: 1;
             }
 
-            /* 操作按钮 - 第3行 */
+            /* 操作按钮 - 绝对定位右上角或者Flex末尾 */
+            /* 为了最节省空间，使用 Flex 末尾，但如果太挤则换行 */
+            /* 用户建议：top right */
             .stock-table td:last-child {
-                grid-column: 1 / -1;
-                grid-row: 3;
-                padding-top: 0.5rem;
-                border-top: 1px solid var(--border-color);
-                margin-top: 0.25rem;
+                /* 使用绝对定位固定在右上角，节省行内空间 */
+                position: absolute;
+                top: 0.6rem;
+                right: 0.6rem;
             }
 
-            .action-btns {
-                justify-content: flex-end;
-                gap: 0.5rem;
+            /* 这种情况下，涨跌幅需要避开按钮区域 */
+            /* 或者，让按钮跟随流？ */
+            /* 让我们试试流式布局 + 小按钮 */
+
+            /* 修改方案：不做绝对定位，而是流式布局 */
+            /* 覆盖上面的 absolute */
+            .stock-table td:last-child {
+                order: 4;
+                position: static;
+                margin-left: 0;
             }
 
+            /* 调整按钮大小 */
             .action-btns .btn-sm {
-                padding: 0.35rem 0.75rem;
+                padding: 0.2rem 0.5rem;
                 font-size: 0.75rem;
+            }
+
+            /* 推荐人 - 换行 */
+            .stock-table td:nth-child(4) {
+                order: 5;
+                width: 100%;
+                margin-top: 0.4rem;
+                font-size: 0.8rem;
+                color: var(--text-secondary);
+                line-height: 1.3;
+                border-top: 1px solid rgba(255, 255, 255, 0.05);
+                padding-top: 0.3rem;
             }
         }
     </style>
@@ -487,18 +554,24 @@
 
         <!-- 周选择 -->
         <div class="card">
-            <h2>📅 选择周</h2>
-            <div class="form-row">
+            <h2>📅 选择周 <span id="weekDateRange"
+                    style="font-size:0.9rem;color:var(--text-secondary);font-weight:normal;margin-left:0.5rem"></span>
+            </h2>
+            <div class="form-row week-select-row">
                 <div class="form-group">
                     <label>年份</label>
-                    <input type="number" id="yearInput" style="width: 100px;">
+                    <input type="number" id="yearInput" style="width: 60px;">
                 </div>
                 <div class="form-group">
                     <label>周数</label>
-                    <input type="number" id="weekInput" style="width: 80px;" min="1" max="53">
+                    <div style="display:flex;align-items:center;gap:2px">
+                        <button class="btn btn-sm" onclick="changeWeek(-1)" style="padding:0.4rem 0.6rem">‹</button>
+                        <input type="number" id="weekInput" style="width: 50px;text-align:center" min="1" max="53">
+                        <button class="btn btn-sm" onclick="changeWeek(1)" style="padding:0.4rem 0.6rem">›</button>
+                    </div>
                 </div>
                 <div class="form-group" style="justify-content: flex-end;">
-                    <button class="btn btn-primary" onclick="selectWeek()">选择</button>
+                    <button class="btn btn-primary" onclick="selectWeek()">Go</button>
                 </div>
             </div>
             <div id="weekList" class="week-list"></div>
@@ -506,12 +579,29 @@
 
         <!-- 原始文本 -->
         <div class="card">
-            <h2>📝 推荐原始文本</h2>
-            <textarea id="rawText" placeholder="粘贴推荐原始文本..."></textarea>
-            <div class="btn-group" style="margin-top: 1rem;">
-                <button class="btn btn-primary" onclick="saveRawText()">保存文本</button>
-            </div>
+            <details>
+                <summary style="display:flex;align-items:center;cursor:pointer;list-style:none;outline:none">
+                    <h2 style="margin:0;flex:1">📝 推荐原始文本</h2>
+                    <span style="opacity:0.5;transform:rotate(90deg);font-size:1.2rem">›</span>
+                </summary>
+                <div style="margin-top:1rem">
+                    <textarea id="rawText" placeholder="粘贴推荐原始文本..."></textarea>
+                    <div class="btn-group" style="margin-top: 1rem;">
+                        <button class="btn btn-primary" onclick="saveRawText()">保存文本</button>
+                        <button class="btn" onclick="copyRawText()">复制文本</button>
+                    </div>
+                </div>
+            </details>
         </div>
+        <style>
+            summary::-webkit-details-marker {
+                display: none;
+            }
+
+            details[open] summary span {
+                transform: rotate(270deg) !important;
+            }
+        </style>
 
         <!-- 操作 -->
         <div class="card">
@@ -541,12 +631,12 @@
             <div class="form-group">
                 <label>股票名称</label>
                 <div style="display:flex;gap:0.5rem">
-                    <input type="text" id="editStockName" style="flex:1">
-                    <button class="btn btn-sm" onclick="guessStockCode()"
-                        style="white-space:nowrap;opacity:0.7">猜一下</button>
+                    <input type="text" id="editStockName" style="flex:1;width:auto;min-width:0">
+                    <button class="btn btn-sm btn-primary" onclick="guessStockCode()"
+                        style="white-space:nowrap;width:auto">猜一下</button>
                 </div>
             </div>
-            <div class="form-row">
+            <div class="form-row stock-code-row">
                 <div class="form-group" style="flex:1">
                     <label>市场</label>
                     <select id="editMarket">
@@ -613,9 +703,46 @@
             if (window.location.hash !== `#${newHash}`) {
                 history.replaceState(null, '', `#${newHash}`);
             }
+            updateWeekRangeDisplay();
+        }
+
+        // 更新周日期范围显示
+        function updateWeekRangeDisplay() {
+            const el = document.getElementById('weekDateRange');
+            if (currentYear && currentWeek && el) {
+                el.textContent = `(${getWeekDateRange(currentYear, currentWeek)})`;
+            } else if (el) {
+                el.textContent = '';
+            }
         }
 
         // 初始化
+        // 切换周
+        function changeWeek(offset) {
+            let y = parseInt(document.getElementById('yearInput').value);
+            let w = parseInt(document.getElementById('weekInput').value);
+            w += offset;
+
+            // Simple logic: assume 52 weeks mostly. 
+            // If going forward from 52, check if 53 exists? 
+            // For simplicity: if > 52 -> next year week 1. 
+            // If user needs week 53, they can type it or we can be smarter later.
+            // Actually, let's allow going up to 53 if we are at 52? 
+            // No, let's just loop at 52 for standard behavior 
+            // or just let it go to 53 then 1.
+            if (w > 53) {
+                y++;
+                w = 1;
+            } else if (w < 1) {
+                y--;
+                w = 52;
+            }
+
+            document.getElementById('yearInput').value = y;
+            document.getElementById('weekInput').value = w;
+            selectWeek();
+        }
+
         async function init() {
             // 优先从hash读取
             const hashData = parseHash();
@@ -636,6 +763,7 @@
 
             await loadWeekList();
             await loadWeekData();
+            updateWeekRangeDisplay();
         }
 
         // 监听hash变化
@@ -648,8 +776,25 @@
                 document.getElementById('weekInput').value = currentWeek;
                 loadWeekData();
                 loadWeekList();
+                updateWeekRangeDisplay();
             }
         });
+
+        // 计算 ISO 周的日期范围
+        function getWeekDateRange(year, week) {
+            // ISO周：周一是第一天，第一周包含该年第一个周四
+            // 使用简单算法：先找到当年1月4日（一定在第一周），
+            // 然后找到该周的周一，再加上(week-1)*7天
+            const jan4 = new Date(year, 0, 4);
+            const dayOfWeek = jan4.getDay() || 7; // 周日转为7
+            const firstMonday = new Date(jan4.getTime() - (dayOfWeek - 1) * 24 * 60 * 60 * 1000);
+
+            const weekStart = new Date(firstMonday.getTime() + (week - 1) * 7 * 24 * 60 * 60 * 1000);
+            const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
+
+            const formatDate = (d) => `${d.getMonth() + 1}/${d.getDate()}`;
+            return `${formatDate(weekStart)}~${formatDate(weekEnd)}`;
+        }
 
         // 加载周列表
         async function loadWeekList() {
@@ -658,12 +803,15 @@
             const weeks = data.data || [];
 
             const container = document.getElementById('weekList');
-            container.innerHTML = weeks.map(w => `
+            container.innerHTML = weeks.map(w => {
+                const dateRange = getWeekDateRange(w.year, w.week);
+                return `
                 <div class="week-item ${w.year === currentYear && w.week === currentWeek ? 'active' : ''}" 
-                     onclick="selectWeekItem(${w.year}, ${w.week})">
+                     onclick="selectWeekItem(${w.year}, ${w.week})"
+                     title="${w.year}-W${w.week} (${dateRange})">
                     ${w.year}-W${w.week}
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         // 选择周
@@ -781,6 +929,33 @@
                 }
             } catch (e) {
                 showStatus('error', '保存失败: ' + e.message);
+            }
+        }
+
+        async function copyRawText() {
+            const text = document.getElementById('rawText').value;
+            if (!text) return showStatus('error', '没有文本');
+
+            try {
+                // Try modern API
+                await navigator.clipboard.writeText(text);
+                showStatus('success', '已复制');
+            } catch (err) {
+                // Fallback for insecure context or older browsers
+                try {
+                    const textArea = document.getElementById('rawText');
+                    textArea.select();
+                    textArea.setSelectionRange(0, 99999); // For mobile
+                    document.execCommand('copy');
+                    showStatus('success', '已复制 (兼容模式)');
+                    // Deselect
+                    if (window.getSelection) {
+                        window.getSelection().removeAllRanges();
+                    }
+                    textArea.blur();
+                } catch (e) {
+                    showStatus('error', '复制失败');
+                }
             }
         }
 

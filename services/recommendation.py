@@ -7,7 +7,7 @@ import re
 import requests
 from typing import Dict, Any, List, Tuple
 from datetime import datetime
-from services.excel_db import get_db
+from services.mongodb_db import get_db
 from services import stock as stock_service
 import config
 

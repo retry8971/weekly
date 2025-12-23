@@ -300,7 +300,7 @@
 
         .stock-code {
             color: var(--text-secondary);
-            font-size: 0.85rem;
+            font-size: 0.68rem;
         }
 
         .change-rate {
@@ -1184,7 +1184,7 @@
                     <div class="rank-num ${rankClass}">${index + 1}</div>
                     <div>
                         <div class="stock-name clickable" onclick="showStockHistory('${stock.code}', '${stock.name}')">${stock.name}</div>
-                        <div class="stock-code">${stock.code}</div>
+                        <div class="stock-code">${stock.code}${stock.market ? '.' + stock.market.toUpperCase() : ''}</div>
                     </div>
                     <div class="change-rate ${changeClass}">
                         ${formatPercent(stock.change_rate)}
