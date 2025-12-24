@@ -51,13 +51,32 @@ def get_weeks():
     return jsonify({'data': weeks})
 
 
+import requests
+from flask import Flask, jsonify, request, send_from_directory, redirect, Response
+
+# ... (imports)
+
 @app.route('/open_url')
 def open_url():
-    """跳转到外部链接"""
+    """代理访问外部链接"""
     target = request.args.get('target')
     if not target:
         return "Missing target URL", 400
-    return redirect(target)
+    
+    try:
+        # 简单的代理实现
+        resp = requests.get(target, headers={
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }, timeout=10)
+        
+        # 过滤掉部分响应头以避免冲突
+        excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
+        headers = [(name, value) for (name, value) in resp.headers.items() 
+                   if name.lower() not in excluded_headers]
+        
+        return Response(resp.content, resp.status_code, headers)
+    except Exception as e:
+        return f"Proxy Error: {str(e)}", 500
 
 
 @app.route('/api/admin/week/<int:year>/<int:week>', methods=['GET'])
