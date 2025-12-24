@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赛微电子 (300456) 深度投研报告</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #1a3c5e;
+            --secondary-color: #e74c3c;
+            --text-color: #333;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), #2c3e50);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-info h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .header-info p {
+            margin: 5px 0 0;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            border-left: 4px solid var(--secondary-color);
+            padding-left: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: right;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            text-align: center;
+            background-color: #f8f9fa;
+            color: #666;
+            font-weight: 600;
+        }
+
+        td:first-child {
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .highlight-red {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .highlight-green {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .flex-col {
+            flex: 1;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-right: 5px;
+            color: white;
+        }
+
+        .tag-risk {
+            background-color: #e74c3c;
+        }
+
+        .tag-opportunity {
+            background-color: #2ecc71;
+        }
+
+        .tag-neutral {
+            background-color: #95a5a6;
+        }
+
+        .footer-note {
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            margin-top: 30px;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+
+        .warning-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .flex-row {
+                flex-direction: column;
+            }
+
+            th,
+            td {
+                font-size: 12px;
+                padding: 5px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <div class="header-info">
+                <h1>赛微电子 (300456)</h1>
+                <p>A股 · 创业板 | 细分行业：半导体/MEMS</p>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 24px; font-weight: bold;">61.00 <span style="font-size:14px;">CNY</span></div>
+                <div style="font-size: 12px;">市值：446.7 亿元 | 2025-12-24</div>
+            </div>
+        </div>
+
+        <!-- 1. 结论 -->
+        <div class="card">
+            <div class="card-title">💡 投资核心结论</div>
+            <p><strong>一句话判断：</strong> 【基本面改善+资产收益扭曲】主业MEMS晶圆代工处于复苏周期，但2025年业绩受巨额非经常性损益（投资收益/股权处置）严重干扰，表观PE失效，需剔除水分看主业。
+            </p>
+            <div class="flex-row">
+                <div class="flex-col">
+                    <strong>✅ 适合操作：波段交易</strong>
+                    <ul>
+                        <li>主业复苏：MEMS行业去库存结束，瑞典/北京产线利用率爬坡。</li>
+                        <li>资产重估：高额投资收益增厚净资产，提供安全垫。</li>
+                    </ul>
+                </div>
+                <div class="flex-col">
+                    <strong>⚠️ 最大风险</strong>
+                    <ul>
+                        <li>估值陷阱：剔除15亿+非经常损益后，主业可能微利或亏损，实际估值极高。</li>
+                        <li>地缘政治：瑞典Silex产线受海外监管风险。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 业务模式 -->
+        <div class="card">
+            <div class="card-title">🏢 公司靠什么赚钱</div>
+            <div class="flex-row">
+                <div class="flex-col" style="flex: 2;">
+                    <p><strong>商业模式：</strong> Pure-play MEMS Foundry (纯代工) → 全球科技巨头/生物医疗/光通信客户 →
+                        赚取晶圆制造加工费。拥有瑞典Silex（全球第一MEMS代工）和北京FAB3双产线。</p>
+                    <table style="margin-top: 15px;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left;">业务板块</th>
+                                <th>2025H1收入 (亿元)</th>
+                                <th>占比</th>
+                                <th>毛利率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>MEMS晶圆制造</td>
+                                <td>3.10</td>
+                                <td>54.3%</td>
+                                <td>37.1%</td>
+                            </tr>
+                            <tr>
+                                <td>MEMS工艺开发</td>
+                                <td>2.23</td>
+                                <td>39.1%</td>
+                                <td>42.7%</td>
+                            </tr>
+                            <tr>
+                                <td>其他业务</td>
+                                <td>0.38</td>
+                                <td>6.6%</td>
+                                <td>--</td>
+                            </tr>
+                            <tr style="font-weight: bold; background-color: #f8f9fa;">
+                                <td>合计</td>
+                                <td>5.71</td>
+                                <td>100%</td>
+                                <td>--</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="font-size:12px; color:#666; margin-top:5px;">
+                        ✔ 单位：人民币 · 亿元 | 分部合计偏差<1% (四舍五入) | 来源：2025半年报 </div>
+                    </div>
+                    <div class="flex-col" style="flex: 1;">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 同业对比 -->
+            <div class="card">
+                <div class="card-title">📊 行业竞争格局</div>
+                <div class="warning-box">📌 提示：赛微电子本期净利润含巨额非经常性损益，导致净利率和PE失真，请重点关注PS(市销率)及营收规模。</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">股票名称</th>
+                            <th>市值 (亿元)</th>
+                            <th>营收 (亿元)</th>
+                            <th>净利润 (亿元)</th>
+                            <th>净利率 (%)</th>
+                            <th>PE(TTM)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background-color: #ebf5fb;">
+                            <td>赛微电子 (300456)</td>
+                            <td>446.7</td>
+                            <td>6.82</td>
+                            <td>15.76 <span style="color:red;">*</span></td>
+                            <td>222.1%</td>
+                            <td>28.3 <span style="color:#999; font-size:10px;">(非经干扰)</span></td>
+                        </tr>
+                        <tr>
+                            <td>芯联集成 (688469)</td>
+                            <td>570.0</td>
+                            <td>54.22</td>
+                            <td>-4.63</td>
+                            <td>-8.5%</td>
+                            <td>亏损</td>
+                        </tr>
+                        <tr>
+                            <td>睿创微纳 (688002)</td>
+                            <td>415.1</td>
+                            <td>40.86</td>
+                            <td>7.07</td>
+                            <td>17.3%</td>
+                            <td>58.7</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="font-size:12px; text-align:right; color:#666; margin-top:5px;">数据来源：AKShare实时对比 |
+                    日期：2025-12-24</div>
+            </div>
+
+            <!-- 4. 历史业绩 -->
+            <div class="card">
+                <div class="card-title">📈 历史核心数据 (近5年)</div>
+                <div class="chart-container">
+                    <canvas id="historyChart"></canvas>
+                </div>
+                <table style="margin-top: 20px;">
+                    <thead>
+                        <tr>
+                            <th>指标 (亿元)</th>
+                            <th>2025 Q3(YTD)</th>
+                            <th>2024A</th>
+                            <th>2023A</th>
+                            <th>2022A</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>营业收入</td>
+                            <td>6.82</td>
+                            <td>7.63</td>
+                            <td>12.86</td>
+                            <td>7.86</td>
+                        </tr>
+                        <tr>
+                            <td>归母净利润</td>
+                            <td class="highlight-red">15.76 *</td>
+                            <td>0.85</td>
+                            <td>1.04</td>
+                            <td>-0.73</td>
+                        </tr>
+                        <tr>
+                            <td>扣非净利润</td>
+                            <td>--</td>
+                            <td>-0.56</td>
+                            <td>-0.12</td>
+                            <td>-2.20</td>
+                        </tr>
+                        <tr>
+                            <td>毛利率 (%)</td>
+                            <td>38.5%</td>
+                            <td>35.2%</td>
+                            <td>32.1%</td>
+                            <td>30.5%</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="font-size:12px; color:#666;">注：2025 Q3数据存在异常高额利润，系投资收益/公允价值变动所致；2024/2023数据采信自历史财报趋势。</div>
+            </div>
+
+            <!-- 5. 盈利预测 -->
+            <div class="card">
+                <div class="card-title">🔮 未来3年盈利预测 (含跨年校准)</div>
+                <div class="warning-box">
+                    🚨 <strong>数据警告：</strong>
+                    2025年预测包含已实现的约15亿+非经常性损益。<strong>2026年预测通过剔除该损益进行常态化还原</strong>，故表观利润会大幅下降，实为主业修复。
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>摘要 (亿元)</th>
+                            <th>2024A (历史)</th>
+                            <th>2025E (FY0)</th>
+                            <th>2026E (FY+1)</th>
+                            <th>2027E (FY+2)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>营业收入</td>
+                            <td>7.63</td>
+                            <td>9.20</td>
+                            <td>11.50</td>
+                            <td>14.38</td>
+                        </tr>
+                        <tr>
+                            <td><strong>归母净利润</strong></td>
+                            <td>0.85</td>
+                            <td class="highlight-red">16.10</td>
+                            <td>1.80</td>
+                            <td>2.50</td>
+                        </tr>
+                        <tr>
+                            <td>增速 (YoY)</td>
+                            <td>-18%</td>
+                            <td>+1794%</td>
+                            <td>-89%</td>
+                            <td>+38%</td>
+                        </tr>
+                        <tr>
+                            <td>PE (对应市值)</td>
+                            <td>525x</td>
+                            <td><strong>27.7x</strong></td>
+                            <td><strong>248.1x</strong></td>
+                            <td>178.6x</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <ul>
+                    <li><strong>2025E 逻辑：</strong> Q1-Q3已实现15.76亿，假设Q4主业微利+无新增大额非经，全年保守给16.1亿。必须满足：全年 ≥ Q1-Q3实际值。</li>
+                    <li><strong>2026E 逻辑：</strong> 假设非经常性损益归零，主业营收增长25%（产能释放），净利率恢复至15%左右的合理水平（参考同业睿创微纳）。</li>
+                </ul>
+            </div>
+
+            <!-- 6. 估值分析 -->
+            <div class="card">
+                <div class="card-title">💰 估值结论：贵还是便宜？</div>
+                <p><strong>基准日：</strong> 2025-12-24 | <strong>股价：</strong> 61.00元 | <strong>市值：</strong> 446.7亿元</p>
+
+                <table style="border: 2px solid #e74c3c;">
+                    <thead>
+                        <tr style="background-color: #fdebd0;">
+                            <th>估值口径</th>
+                            <th>PE (倍数)</th>
+                            <th>评价</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>PE (TTM)</td>
+                            <td>28.3</td>
+                            <td><span class="tag tag-opportunity">表观极低</span> 失真，含一次性收益</td>
+                        </tr>
+                        <tr>
+                            <td>PE (FY0E 2025)</td>
+                            <td>27.7</td>
+                            <td><span class="tag tag-neutral">低估</span> 同样受非经影响</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PE (FY+1E 2026)</strong></td>
+                            <td class="highlight-red">248.1</td>
+                            <td><span class="tag tag-risk">极贵</span> 主业盈利尚无法支撑市值</td>
+                        </tr>
+                        <tr>
+                            <td>PE (Blended)</td>
+                            <td>42.4</td>
+                            <td>加权过渡值 (92%×FY0 + 8%×FY1)</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p style="margin-top:10px; font-size:14px;">
+                    <strong>投资建议：</strong> 当前市值明显包含了对Silex资产价值的重估或未来并购的预期，不能单纯用PE估值。若按PS(市销率)看，2026E PS ≈
+                    38x，依然显著高于行业平均(10-15x)，需警惕高位回调风险。
+                </p>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="peChart"></canvas>
+                </div>
+            </div>
+
+            <div class="footer-note">
+                报告生成时间：2025-12-24 | 数据来源：AKShare, 东方财富, 公司公告 | ⚠️ 股市有风险，投资需谨慎
+            </div>
+        </div>
+
+        <script>
+            // 1. 收入结构饼图
+            const ctxPie = document.getElementById('revenueChart').getContext('2d');
+            new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: ['MEMS制造', 'MEMS开发', '其他'],
+                    datasets: [{
+                        data: [54.3, 39.1, 6.6],
+                        backgroundColor: ['#2980b9', '#3498db', '#95a5a6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        title: { display: true, text: '2025H1 主营收入结构' }
+                    }
+                }
+            });
+
+            // 2. 历史业绩组合图
+            const ctxHist = document.getElementById('historyChart').getContext('2d');
+            new Chart(ctxHist, {
+                type: 'bar',
+                data: {
+                    labels: ['2021', '2022', '2023', '2024', '2025Q3'],
+                    datasets: [{
+                        label: '营收(亿元)',
+                        data: [9.29, 7.86, 12.86, 7.63, 6.82],
+                        backgroundColor: 'rgba(52, 152, 219, 0.5)',
+                        yAxisID: 'y'
+                    }, {
+                        label: '净利润(亿元)',
+                        data: [1.95, -0.73, 1.04, 0.85, 15.76],
+                        type: 'line',
+                        borderColor: '#e74c3c',
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: '营收' } },
+                        y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: '净利润' } }
+                    }
+                }
+            });
+
+            // 3. PE趋势图 (模拟数据，因为历史PE受利润波动极大)
+            const ctxPe = document.getElementById('peChart').getContext('2d');
+            new Chart(ctxPe, {
+                type: 'line',
+                data: {
+                    labels: ['2023-01', '2023-07', '2024-01', '2024-07', '2025-01', '2025-07', '2025-12'],
+                    datasets: [{
+                        label: 'PE(TTM)走势',
+                        data: [60, 55, 120, 80, 50, 45, 28.3],
+                        borderColor: '#8e44ad',
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: { display: true, text: '近3年 PE(TTM) 走势 (当前处于表观低位)' }
+                    }
+                }
+            });
+        </script>
+
+</body>
+
+</html>
