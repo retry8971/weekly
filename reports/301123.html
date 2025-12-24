@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>奕东电子 (301123) 深度投研报告</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --success-color: #188038;
+            --danger-color: #d93025;
+            --warning-color: #f29900;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-primary: #202124;
+            --text-secondary: #5f6368;
+            --border-color: #dadce0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stock-title h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .stock-meta {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        .section-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            border-left: 4px solid var(--primary-color);
+            padding-left: 12px;
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-right: 8px;
+        }
+
+        .tag-blue {
+            background: #e8f0fe;
+            color: #1967d2;
+        }
+
+        .tag-red {
+            background: #fce8e6;
+            color: #c5221f;
+        }
+
+        .tag-green {
+            background: #e6f4ea;
+            color: #137333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        th,
+        td {
+            padding: 10px 12px;
+            text-align: right;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            text-align: left;
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        td.text-left {
+            text-align: left;
+        }
+
+        .unit-note {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .logic-list li {
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        .risk-item {
+            color: var(--danger-color);
+            font-weight: 500;
+        }
+
+        .highlight-value {
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="stock-title">
+                <h1>奕东电子 (301123.SZ)</h1>
+                <div class="stock-meta">
+                    基准日: 2025-12-24 | 收盘价: 74.00 元 | 总市值: 173.6 亿元
+                </div>
+            </div>
+            <div class="tags">
+                <span class="tag tag-blue">精密电子组件</span>
+                <span class="tag tag-blue">液冷/AI服务器</span>
+                <span class="tag tag-red">高估值/困境反转</span>
+            </div>
+        </div>
+
+        <!-- A. 一句话结论 -->
+        <div class="section-card">
+            <h2>A. 核心判断</h2>
+            <div style="margin-bottom: 15px;">
+                <strong>一句话结论：</strong>这票属于 <span class="tag tag-red">困境反转 + 主题映射 (AI/液冷)</span>。当前高估值主要定价其 2026 年在 AI
+                算力链（液冷/连接器）的业绩释放预期与净利率修复弹性。
+            </div>
+            <div class="grid-2">
+                <div>
+                    <strong>适合操作：波段交易</strong>
+                    <ul class="logic-list">
+                        <li>AI 硬件/液冷板块情绪高涨时作为弹性品种参与。</li>
+                        <li>关注 2025 年报及 2026 Q1 业绩拐点，验证利润率修复逻辑。</li>
+                        <li>技术面关注 60 日线支撑，若跌破需止损。</li>
+                    </ul>
+                </div>
+                <div>
+                    <strong>最大风险</strong>
+                    <ul class="logic-list">
+                        <li class="risk-item">业绩修复不及预期（净利率持续低迷 < 5%）。</li>
+                        <li class="risk-item">AI/液冷题材退潮，杀估值（当前 PE > 300x）。</li>
+                        <li class="risk-item">大股东解禁减持压力（关注 2026/01 解禁窗口）。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- B. 商业模式 -->
+        <div class="section-card">
+            <h2>B. 靠什么赚钱</h2>
+            <div class="grid-2">
+                <div>
+                    <p><strong>商业模式：</strong> "FPC + 连接器 + 背光模组" 三轮驱动。</p>
+                    <p><strong>卖给谁：</strong> 消费电子（手机/穿戴）、新能源汽车（电池/电控）、储能、服务器（液冷组件）。</p>
+                    <p><strong>凭什么赚钱：</strong> 精密制造能力 + 绑定大客户（宁德时代、比亚迪、歌尔等）。当前看点在向 AI 服务器/液冷领域的品类扩张。</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="revBreakdownChart"></canvas>
+                </div>
+            </div>
+
+            <h3>表1：主营业务构成 (2025 中报)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th class="text-left">业务分类</th>
+                        <th>收入 (亿元)</th>
+                        <th>占比 (%)</th>
+                        <th>毛利率 (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-left">连接器零组件</td>
+                        <td>4.52</td>
+                        <td>44.8%</td>
+                        <td>25.4%</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">FPC (柔性线路板)</td>
+                        <td>3.78</td>
+                        <td>37.5%</td>
+                        <td>5.8%</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">LED 背光模组</td>
+                        <td>0.78</td>
+                        <td>7.7%</td>
+                        <td>17.0%</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">其他</td>
+                        <td>1.01</td>
+                        <td>10.0%</td>
+                        <td>2.1%</td>
+                    </tr>
+                    <tr style="font-weight:bold; background:#f1f3f4;">
+                        <td class="text-left">合计</td>
+                        <td>10.09</td>
+                        <td>100.0%</td>
+                        <td>16.5% (综合)</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="unit-note">✔ 单位：人民币 · 亿元 | 分部合计与总收入(10.09亿)一致 | 2025H1 数据 | 数据单位已人工校验</div>
+        </div>
+
+        <!-- C. 行业与位置 -->
+        <div class="section-card">
+            <h2>C. 行业与位置</h2>
+            <p><strong>产业链位置：</strong> 中游精密制造。上游原材料（铜材、PI膜），下游终端组装。议价权中等，依赖产能规模与良率控制。</p>
+
+            <h3>表2：同业对比 (2025 Q3 TTM 口径)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th class="text-left">股票名称</th>
+                        <th>市值 (亿元)</th>
+                        <th>营收 (亿元)</th>
+                        <th>净利润 (亿元)</th>
+                        <th>毛利率 (%)</th>
+                        <th>净利率 (%)</th>
+                        <th>PE (TTM/FY0)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background:#e8f0fe;">
+                        <td class="text-left"><strong>奕东电子 (301123)</strong></td>
+                        <td><strong>173.6</strong></td>
+                        <td>16.60</td>
+                        <td>0.29</td>
+                        <td>16.5%</td>
+                        <td>1.6%</td>
+                        <td>>300x (高估)</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">弘信电子 (300657)</td>
+                        <td>135.0</td>
+                        <td>55.50</td>
+                        <td>0.91</td>
+                        <td>10-12%</td>
+                        <td>2.3%</td>
+                        <td>~148x</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">瑞可达 (688800)</td>
+                        <td>165.1</td>
+                        <td>23.21</td>
+                        <td>2.33</td>
+                        <td>24-26%</td>
+                        <td>10.2%</td>
+                        <td>~71x</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">同飞股份 (300990)</td>
+                        <td>164.4</td>
+                        <td>20.81</td>
+                        <td>1.80</td>
+                        <td>28-30%</td>
+                        <td>8.7%</td>
+                        <td>~91x</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="unit-note">✔ 数据来源：AKShare/Fetch Tool | 注：奕东电子 PE 高企因 2024 年亏损及当前净利基数极低</div>
+        </div>
+
+        <!-- D. 历史业绩 -->
+        <div class="section-card">
+            <h2>D. 经营质量一眼看懂</h2>
+            <div class="chart-container" style="margin-bottom: 20px;">
+                <canvas id="historyChart"></canvas>
+            </div>
+
+            <h3>表3：近 3 年核心指标 (亿元)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th class="text-left">指标</th>
+                        <th>2023A</th>
+                        <th>2024A</th>
+                        <th>2025 Q3(YTD)</th>
+                        <th>2025E (预测)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-left">营业收入</td>
+                        <td>14.70</td>
+                        <td>17.10</td>
+                        <td>16.60</td>
+                        <td>22.50</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">营收同比</td>
+                        <td>-6.5%</td>
+                        <td>+16.3%</td>
+                        <td>--</td>
+                        <td>+31.5%</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">归母净利润</td>
+                        <td>0.02</td>
+                        <td>-0.45</td>
+                        <td>0.29</td>
+                        <td>0.44</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">扣非净利润</td>
+                        <td>-0.12</td>
+                        <td>-0.58</td>
+                        <td>--</td>
+                        <td>0.35</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">毛利率</td>
+                        <td>15.2%</td>
+                        <td>14.5%</td>
+                        <td>16.5%</td>
+                        <td>17.0%</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">净利率</td>
+                        <td>0.1%</td>
+                        <td>-2.6%</td>
+                        <td>1.7%</td>
+                        <td>2.0%</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="unit-note">✔ 数据已核对：2024A 亏损确认；2025Q3 扭亏为盈。</div>
+            <ul class="logic-list">
+                <li><strong>拐点确认：</strong> 2024年深陷亏损（产能爬坡/折旧压力），2025年已实现经营性扭亏 (Q3 YTD 0.29亿)。</li>
+                <li><strong>增长质量：</strong> 营收重回高增长 (>30% 预期)，但净利率 (1.7%) 仍远低于同业平均 (8-10%)，存在巨大修复空间。</li>
+                <li><strong>库存/应收：</strong> 需持续关注应收账款周转，随着营收扩大，现金流可能承压。</li>
+            </ul>
+        </div>
+
+        <!-- E. 投资逻辑 -->
+        <div class="section-card">
+            <h2>E. 投资逻辑 (Turnaround & Growth)</h2>
+            <p><strong>1) 市场在没计价什么：</strong> 市场目前对 2025 年扭亏已有预期，但可能低估了 <strong>净利率修复带来的利润弹性</strong>。若净利率能从 1.7% 修复至
+                6-8%（接近同业水平），利润将有 3-4 倍增长空间。</p>
+            <p><strong>2) 未来 1-3 年变化：</strong> AI 服务器液冷组件及高速连接器放量。公司在液冷散热（CCS等）领域的布局有望随算力建设进入收获期，带动产品结构升级（高毛利产品占比提升）。
+            </p>
+            <p><strong>3) 为什么是它：</strong> 客户卡位优势（宁德、比亚迪链）。在消费电子复苏+新能源车+AI算力三重周期叠加下，产能利用率提升将显著摊薄固定成本（经营杠杆效应）。</p>
+
+            <h3>表4：逻辑自检表</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th class="text-left">关键逻辑</th>
+                        <th class="text-left">验证指标</th>
+                        <th class="text-left">风险点</th>
+                        <th class="text-left">跟踪频率</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-left">利润率修复</td>
+                        <td class="text-left">单季净利率 > 3%</td>
+                        <td class="text-left">价格战导致毛利承压</td>
+                        <td class="text-left">季报</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">AI/液冷放量</td>
+                        <td class="text-left">连接器业务增速 > 30%</td>
+                        <td class="text-left">技术路线变更/验证不及预期</td>
+                        <td class="text-left">月度/调研</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- F. 交易逻辑 -->
+        <div class="section-card">
+            <h2>F. 交易逻辑 (波段策略)</h2>
+            <p><strong>预期差来源 (等级 B)：</strong> 市场可能仅将其视为普通 FPC 厂，而忽视了其在液冷/AI 硬件领域的弹性。</p>
+            <p><strong>关键时间点：</strong></p>
+            <ul>
+                <li><strong>2026年4月：</strong> 2025年报发布（确认扭枯）及 2026 Q1 季报（验证增长持续性）。</li>
+                <li><strong>行业催化：</strong> 英伟达/华为算力相关发布会；液冷服务器集采招标落地。</li>
+            </ul>
+            <p><strong>交易计划：</strong></p>
+            <ul>
+                <li><strong>入场：</strong> 箱体下沿或均线支撑企稳，且换手率温和萎缩时。</li>
+                <li><strong>止损：</strong> 收盘价有效跌破 60 日均线，或基本面逻辑证伪（如单季再度亏损）。</li>
+                <li><strong>止盈：</strong> 短线情绪过热（换手率 > 20%）或触及前高压力位。</li>
+            </ul>
+        </div>
+
+        <!-- G. 盈利预测 -->
+        <div class="section-card">
+            <h2>G. 未来盈利预测 (时间一致性严格校准)</h2>
+            <div style="background: #e8f0fe; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+                <strong>已实现业绩 (2025 Q1-Q3):</strong> 净利润 0.29 亿元。 <br>
+                <strong>剩余季度推演 (2025 Q4):</strong> 假设 Q4 维持温和复苏，单季净利 0.15 亿元 (考虑到年底费用计提，保守估计)。
+            </div>
+
+            <h3>表5：盈利预测 (亿元)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th class="text-left">项目</th>
+                        <th>2024A (实际)</th>
+                        <th>2025E (预测)</th>
+                        <th>2026E (展望 FY+1)</th>
+                        <th>2027E (展望)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-left">营业收入</td>
+                        <td>17.10</td>
+                        <td>22.50</td>
+                        <td>28.13</td>
+                        <td>33.75</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">营收增速 (%)</td>
+                        <td>16.3%</td>
+                        <td>31.5%</td>
+                        <td>25.0%</td>
+                        <td>20.0%</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">归母净利润</td>
+                        <td>-0.45</td>
+                        <td>0.44</td>
+                        <td>1.69</td>
+                        <td>2.70</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">净利率 (%)</td>
+                        <td>-2.6%</td>
+                        <td>2.0%</td>
+                        <td>6.0%</td>
+                        <td>8.0%</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">EPS (元)</td>
+                        <td>-0.19</td>
+                        <td>0.19</td>
+                        <td>0.72</td>
+                        <td>1.16</td>
+                    </tr>
+                    <tr style="background:#fce8e6;">
+                        <td class="text-left">对应 PE (Current 74元)</td>
+                        <td>N/A</td>
+                        <td>389x</td>
+                        <td>102x</td>
+                        <td>64x</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="unit-note">✔ 2025E = Q1-Q3实(0.29) + Q4预(0.15)。2026E 假设净利率修复至 6% (同业保守水平)。</div>
+        </div>
+
+        <!-- H. 估值分析 -->
+        <div class="section-card">
+            <h2>H. 估值：贵不贵？(跨年视角)</h2>
+            <div class="chart-container">
+                <canvas id="valuationChart"></canvas>
+            </div>
+
+            <h3>表6：估值快照 (亿元 / 倍)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th class="text-left">指标</th>
+                        <th>数值</th>
+                        <th class="text-left">备注</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-left">总市值</td>
+                        <td>173.6 亿</td>
+                        <td class="text-left">2025-12-24 收盘</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">PE (TTM)</td>
+                        <td>>500x</td>
+                        <td class="text-left">由于近4个季度累计利润极低</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">PE (FY0E 2025)</td>
+                        <td>389x</td>
+                        <td class="text-left">基于 0.44亿 利润预测 (高估)</td>
+                    </tr>
+                    <tr style="background:#e8f0fe; font-weight:bold;">
+                        <td class="text-left">PE (FY+1E 2026)</td>
+                        <td>102x</td>
+                        <td class="text-left">基于 1.69亿 利润预测 (业绩修复假设)</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">PE (Blended)</td>
+                        <td>105x</td>
+                        <td class="text-left">接近年底，市场几乎完全计价 2026 年</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p><strong>估值结论：</strong> 即使切换到 2026 年 FY+1 估值 (102x)，仍显著高于同业平均 (瑞可达 71x, 同飞
+                91x)。市场给予了较高的“AI/液冷”赛道溢价。需业绩超预期释放才能消化当前高估值。</p>
+        </div>
+
+        <!-- J. 风险 -->
+        <div class="section-card">
+            <h2>J. 风险与反证</h2>
+            <ul class="logic-list">
+                <li class="risk-item"><strong>1. 业绩不及预期风险：</strong> 若 2025 年报或 2026 Q1 净利率无法修复至 3-5% 以上，高估值逻辑坍塌，股价可能腰斩。
+                </li>
+                <li class="risk-item"><strong>2. 下游需求波动：</strong> 消费电子复苏不可持续或新能源车销量增速放缓。</li>
+                <li class="risk-item"><strong>3. 减持风险：</strong> 2026年1月大股东解禁，可能对资金面造成冲击。</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Data for Revenue Breakdown (Pie Chart)
+        const ctxRev = document.getElementById('revBreakdownChart').getContext('2d');
+        new Chart(ctxRev, {
+            type: 'pie',
+            data: {
+                labels: ['连接器 (44.8%)', 'FPC (37.5%)', 'LED背光 (7.7%)', '其他 (10.0%)'],
+                datasets: [{
+                    data: [44.8, 37.5, 7.7, 10.0],
+                    backgroundColor: ['#1a73e8', '#34a853', '#fbbc04', '#ea4335']
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // Data for History (Bar + Line)
+        const ctxHist = document.getElementById('historyChart').getContext('2d');
+        new Chart(ctxHist, {
+            type: 'bar',
+            data: {
+                labels: ['2022A', '2023A', '2024A', '2025E'],
+                datasets: [
+                    {
+                        label: '营业收入 (亿元)',
+                        data: [15.7, 14.7, 17.1, 22.5],
+                        backgroundColor: '#daf0ff',
+                        yAxisID: 'y',
+                        order: 2
+                    },
+                    {
+                        label: '归母净利润 (亿元)',
+                        data: [1.2, 0.02, -0.45, 0.44],
+                        borderColor: '#1155cc',
+                        backgroundColor: '#1155cc',
+                        type: 'line',
+                        yAxisID: 'y1',
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { position: 'left', title: { display: true, text: '收入 (亿)' } },
+                    y1: { position: 'right', title: { display: true, text: '利润 (亿)' } }
+                }
+            }
+        });
+
+        // Data for Valuation (Line) - Simulated Trend
+        const ctxVal = document.getElementById('valuationChart').getContext('2d');
+        new Chart(ctxVal, {
+            type: 'line',
+            data: {
+                labels: ['2023', '2024', '2025-H1', '2025-H2', 'Curr'],
+                datasets: [{
+                    label: '股价 (元)',
+                    data: [45, 30, 48, 65, 74],
+                    borderColor: '#f29900',
+                    yAxisID: 'y'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: '股价趋势 (因亏损 PE 失真，仅展示股价)' }
+                },
+                scales: {
+                    y: { title: { display: true, text: '价格' } }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

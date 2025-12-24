@@ -1,7 +1,7 @@
 """
 股票推荐系统 - Flask主程序
 """
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory, redirect
 from datetime import datetime
 import os
 
@@ -49,6 +49,15 @@ def get_weeks():
     db = get_db()
     weeks = db.get_all_weeks()
     return jsonify({'data': weeks})
+
+
+@app.route('/open_url')
+def open_url():
+    """跳转到外部链接"""
+    target = request.args.get('target')
+    if not target:
+        return "Missing target URL", 400
+    return redirect(target)
 
 
 @app.route('/api/admin/week/<int:year>/<int:week>', methods=['GET'])
@@ -249,6 +258,130 @@ def reset_week_sync(year, week):
     db = get_db()
     deleted = db.reset_week_tracking_sync(year, week)
     return jsonify({'data': {'success': True, 'deleted': deleted}})
+
+
+# ==================== 研报管理 API ====================
+
+REPORTS_DIR = os.path.join(os.path.dirname(__file__), 'reports')
+
+@app.route('/api/reports', methods=['GET'])
+def list_reports():
+    """获取所有研报列表"""
+    if not os.path.exists(REPORTS_DIR):
+        return jsonify({'data': []})
+    
+    reports = []
+    # 优先查找 .url 文件，其次是 .html 文件
+    # 实际上由于互斥逻辑，每个 code 应该只有其中一种
+    files = os.listdir(REPORTS_DIR)
+    
+    # 收集所有的 stock_code
+    codes = set()
+    for f in files:
+        if f.endswith('.html') or f.endswith('.url'):
+            codes.add(f.rsplit('.', 1)[0])
+            
+    for code in codes:
+        url_file = f"{code}.url"
+        html_file = f"{code}.html"
+        
+        if url_file in files:
+            # 读取 URL 内容
+            try:
+                with open(os.path.join(REPORTS_DIR, url_file), 'r', encoding='utf-8') as f:
+                    url = f.read().strip()
+                reports.append({
+                    'stock_code': code,
+                    'type': 'link',
+                    'url': url,
+                    'filename': url_file
+                })
+            except Exception as e:
+                print(f"Error reading {url_file}: {e}")
+        elif html_file in files:
+            reports.append({
+                'stock_code': code,
+                'type': 'file',
+                'url': f"/reports/{html_file}",
+                'filename': html_file
+            })
+            
+    return jsonify({'data': reports})
+
+
+@app.route('/api/reports/upload', methods=['POST'])
+def upload_report():
+    """
+    上传研报
+    type: 'file' | 'link'
+    file: (if type=file)
+    link: (if type=link)
+    stock_code: required
+    """
+    stock_code = request.form.get('stock_code', '').strip()
+    report_type = request.form.get('type', 'file')
+    
+    if not stock_code:
+        return jsonify({'error': '缺少股票代码'}), 400
+
+    # 确保目录存在
+    os.makedirs(REPORTS_DIR, exist_ok=True)
+    
+    # 清理旧文件 (互斥)
+    old_html = os.path.join(REPORTS_DIR, f'{stock_code}.html')
+    old_url = os.path.join(REPORTS_DIR, f'{stock_code}.url')
+    if os.path.exists(old_html): os.remove(old_html)
+    if os.path.exists(old_url): os.remove(old_url)
+    
+    if report_type == 'link':
+        link = request.form.get('link', '').strip()
+        if not link:
+            return jsonify({'error': '缺少链接地址'}), 400
+        
+        # 保存 .url 文件
+        with open(os.path.join(REPORTS_DIR, f'{stock_code}.url'), 'w', encoding='utf-8') as f:
+            f.write(link)
+        
+        return jsonify({'data': {'saved': True, 'stock_code': stock_code, 'type': 'link'}})
+        
+    else: # type == 'file'
+        if 'file' not in request.files:
+            return jsonify({'error': '未上传文件'}), 400
+        
+        file = request.files['file']
+        if not file.filename.endswith('.html'):
+            return jsonify({'error': '只支持 HTML 文件'}), 400
+        
+        # 保存 .html 文件
+        file.save(os.path.join(REPORTS_DIR, f'{stock_code}.html'))
+        
+        return jsonify({'data': {'saved': True, 'stock_code': stock_code, 'type': 'file'}})
+
+
+@app.route('/api/reports/<stock_code>', methods=['DELETE'])
+def delete_report(stock_code):
+    """删除研报 (同时尝试删除 .html 和 .url)"""
+    deleted = False
+    
+    html_path = os.path.join(REPORTS_DIR, f'{stock_code}.html')
+    if os.path.exists(html_path):
+        os.remove(html_path)
+        deleted = True
+        
+    url_path = os.path.join(REPORTS_DIR, f'{stock_code}.url')
+    if os.path.exists(url_path):
+        os.remove(url_path)
+        deleted = True
+        
+    if deleted:
+        return jsonify({'data': {'deleted': True}})
+    return jsonify({'error': '文件不存在'}), 404
+
+
+@app.route('/reports/<path:filename>')
+def serve_report(filename):
+    """静态访问研报文件"""
+    return send_from_directory(REPORTS_DIR, filename)
 
 
 # ==================== 错误处理 ====================

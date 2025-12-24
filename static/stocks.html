@@ -413,6 +413,7 @@
                 <button class="nav-btn" onclick="toggleTheme()" title="切换主题">🌓</button>
                 <button class="nav-btn primary" onclick="syncTracking()">🔄 同步</button>
                 <button class="nav-btn danger" onclick="clearTracking()">🗑️ 清空</button>
+                <button class="nav-btn" onclick="openReportModal()" title="上传研报">📄</button>
             </div>
         </div>
 
@@ -435,6 +436,49 @@
 
     <!-- 状态栏 -->
     <div id="statusBar" class="status-bar"></div>
+
+    <!-- 研报上传弹窗 -->
+    <div id="reportModal" class="modal-overlay" onclick="closeReportModal(event)">
+        <div class="modal" onclick="event.stopPropagation()" style="max-width: 500px;">
+            <button class="modal-close" onclick="closeReportModal()">&times;</button>
+            <h2>📄 研报管理</h2>
+            <div style="margin-bottom: 1rem;">
+                <label style="display:block; margin-bottom:0.5rem; color:var(--text-secondary);">股票代码</label>
+                <input type="text" id="reportStockCode" placeholder="如: 600519"
+                    style="width:100%; padding:0.5rem; border:1px solid var(--border-color); border-radius:0.25rem; background:var(--bg-tertiary); color:var(--text-primary);">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display:block; margin-bottom:0.5rem; color:var(--text-secondary);">研报类型</label>
+                <div style="display:flex; gap:1rem; margin-bottom:0.5rem;">
+                    <label style="cursor:pointer; display:flex; align-items:center; gap:0.5rem;">
+                        <input type="radio" name="reportType" value="file" checked onchange="toggleReportInput()">
+                        <span>HTML 文件</span>
+                    </label>
+                    <label style="cursor:pointer; display:flex; align-items:center; gap:0.5rem;">
+                        <input type="radio" name="reportType" value="link" onchange="toggleReportInput()">
+                        <span>外部链接</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="fileInputGroup" style="margin-bottom: 1rem;">
+                <label style="display:block; margin-bottom:0.5rem; color:var(--text-secondary);">HTML 文件</label>
+                <input type="file" id="reportFile" accept=".html"
+                    style="width:100%; padding:0.5rem; border:1px solid var(--border-color); border-radius:0.25rem; background:var(--bg-tertiary); color:var(--text-primary);">
+            </div>
+
+            <div id="linkInputGroup" style="margin-bottom: 1rem; display:none;">
+                <label style="display:block; margin-bottom:0.5rem; color:var(--text-secondary);">外部链接地址</label>
+                <input type="text" id="reportLink" placeholder="https://..."
+                    style="width:100%; padding:0.5rem; border:1px solid var(--border-color); border-radius:0.25rem; background:var(--bg-tertiary); color:var(--text-primary);">
+            </div>
+            <button onclick="uploadReport()"
+                style="width:100%; padding:0.75rem; background:var(--primary-color); color:white; border:none; border-radius:0.25rem; cursor:pointer; font-weight:600;">上传研报</button>
+            <hr style="margin:1rem 0; border-color:var(--border-color);">
+            <h3 style="margin-bottom:0.5rem; font-size:0.9rem;">已上传研报</h3>
+            <ul id="reportList" style="list-style:none; max-height:200px; overflow-y:auto;"></ul>
+        </div>
+    </div>
 
     <script>
         // 主题切换
@@ -744,6 +788,123 @@
         fetchRecommenderRatings();
         loadStocks();
         loadWeekStatus();
+
+        // ========== 研报管理 ==========
+        function openReportModal() {
+            document.getElementById('reportModal').style.display = 'flex';
+            loadReportList();
+        }
+
+        function closeReportModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('reportModal').style.display = 'none';
+        }
+
+        function toggleReportInput() {
+            const type = document.querySelector('input[name="reportType"]:checked').value;
+            document.getElementById('fileInputGroup').style.display = type === 'file' ? 'block' : 'none';
+            document.getElementById('linkInputGroup').style.display = type === 'link' ? 'block' : 'none';
+        }
+
+        async function loadReportList() {
+            try {
+                const res = await fetch('/api/reports');
+                const data = await res.json();
+                const reports = data.data || [];
+                const ul = document.getElementById('reportList');
+                if (reports.length === 0) {
+                    ul.innerHTML = '<li style="color:var(--text-muted);">暂无研报</li>';
+                    return;
+                }
+                ul.innerHTML = reports.map(r => {
+                    const isLink = r.type === 'link';
+                    const icon = isLink ? '🔗' : '📄';
+                    const display = isLink ? '链接' : '文件';
+                    const url = isLink
+                        ? `/open_url?target=${encodeURIComponent(r.url)}`
+                        : `/reports/${r.filename}`;
+
+                    return `
+                    <li style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem; border-bottom:1px solid var(--border-color);">
+                        <div style="display:flex; align-items:center; gap:0.5rem; overflow:hidden;">
+                            <span>${icon}</span>
+                            <a href="${url}" target="_blank" style="color:var(--accent-color); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">
+                                ${r.stock_code} <span style="font-size:0.8em; opacity:0.7">(${display})</span>
+                            </a>
+                        </div>
+                        <button onclick="deleteReport('${r.stock_code}')" style="background:var(--danger-color); color:white; border:none; padding:0.25rem 0.5rem; border-radius:0.25rem; cursor:pointer; font-size:0.75rem; flex-shrink:0;">删除</button>
+                    </li>
+                `}).join('');
+            } catch (e) {
+                console.error('加载研报列表失败:', e);
+            }
+        }
+
+        async function uploadReport() {
+            const stockCode = document.getElementById('reportStockCode').value.trim();
+            const type = document.querySelector('input[name="reportType"]:checked').value;
+
+            if (!stockCode) {
+                showStatus('error', '请输入股票代码');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('stock_code', stockCode);
+            formData.append('type', type);
+
+            if (type === 'file') {
+                const fileInput = document.getElementById('reportFile');
+                const file = fileInput.files[0];
+                if (!file) {
+                    showStatus('error', '请选择 HTML 文件');
+                    return;
+                }
+                formData.append('file', file);
+            } else {
+                const link = document.getElementById('reportLink').value.trim();
+                if (!link) {
+                    showStatus('error', '请输入链接地址');
+                    return;
+                }
+                formData.append('link', link);
+            }
+
+            try {
+                const res = await fetch('/api/reports/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.data?.saved) {
+                    showStatus('success', `研报(${type === 'link' ? '链接' : '文件'})上传成功`);
+                    document.getElementById('reportStockCode').value = '';
+                    document.getElementById('reportFile').value = '';
+                    document.getElementById('reportLink').value = '';
+                    loadReportList();
+                } else {
+                    showStatus('error', data.error || '上传失败');
+                }
+            } catch (e) {
+                showStatus('error', '上传失败: ' + e.message);
+            }
+        }
+
+        async function deleteReport(stockCode) {
+            if (!confirm(`确定删除 ${stockCode} 研报?`)) return;
+            try {
+                const res = await fetch(`/api/reports/${stockCode}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.data?.deleted) {
+                    showStatus('success', '已删除');
+                    loadReportList();
+                } else {
+                    showStatus('error', data.error || '删除失败');
+                }
+            } catch (e) {
+                showStatus('error', '删除失败: ' + e.message);
+            }
+        }
     </script>
 </body>
 
