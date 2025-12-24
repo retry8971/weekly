@@ -1234,9 +1234,7 @@
                 const data = await res.json();
                 const reports = data.data || [];
                 reportMap = new Map(reports.map(r => {
-                    const url = r.type === 'link'
-                        ? `/open_url?target=${encodeURIComponent(r.url)}`
-                        : `/reports/${r.filename}`;
+                    const url = r.type === 'link' ? r.url : `/reports/${r.filename}`;
                     return [r.stock_code, url];
                 }));
             } catch (e) {

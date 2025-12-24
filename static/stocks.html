@@ -820,9 +820,7 @@
                     const isLink = r.type === 'link';
                     const icon = isLink ? '🔗' : '📄';
                     const display = isLink ? '链接' : '文件';
-                    const url = isLink
-                        ? `/open_url?target=${encodeURIComponent(r.url)}`
-                        : `/reports/${r.filename}`;
+                    const url = isLink ? r.url : `/reports/${r.filename}`;
 
                     return `
                     <li style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem; border-bottom:1px solid var(--border-color);">
