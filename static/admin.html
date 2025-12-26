@@ -684,6 +684,7 @@
 
         let currentYear = null;
         let currentWeek = null;
+        let reportMap = new Map(); // code -> url
 
         // 解析URL hash (格式: #2025-W51)
         function parseHash() {
@@ -761,6 +762,10 @@
             document.getElementById('weekInput').value = currentWeek;
             updateHash();
 
+            document.getElementById('weekInput').value = currentWeek;
+            updateHash();
+
+            await fetchReportCodes();
             await loadWeekList();
             await loadWeekData();
             updateWeekRangeDisplay();
@@ -780,7 +785,6 @@
             }
         });
 
-        // 计算 ISO 周的日期范围
         function getWeekDateRange(year, week) {
             // ISO周：周一是第一天，第一周包含该年第一个周四
             // 使用简单算法：先找到当年1月4日（一定在第一周），
@@ -794,6 +798,21 @@
 
             const formatDate = (d) => `${d.getMonth() + 1}/${d.getDate()}`;
             return `${formatDate(weekStart)}~${formatDate(weekEnd)}`;
+        }
+
+        // 获取研报列表
+        async function fetchReportCodes() {
+            try {
+                const res = await fetch('/api/reports');
+                const data = await res.json();
+                const reports = data.data || [];
+                reportMap = new Map(reports.map(r => {
+                    const url = r.type === 'link' ? r.url : `/reports/${r.filename}`;
+                    return [r.stock_code, url];
+                }));
+            } catch (e) {
+                console.warn('获取研报列表失败:', e);
+            }
         }
 
         // 加载周列表
@@ -881,10 +900,27 @@
                         </tr>
                     </thead>
                     <tbody>
-                        ${stocks.map((s, idx) => `
+                        ${stocks.map((s, idx) => {
+                            const reportUrl = s.stock_code ? reportMap.get(s.stock_code) : null;
+                            const reportIcon = reportUrl ? `
+                                <a href="${reportUrl}" target="_blank" title="查看研报" 
+                                   style="margin-left:0.3rem; display:inline-flex; align-items:center; color:var(--accent-color); opacity:0.8; text-decoration:none;">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        <polyline points="10 9 9 9 8 9"></polyline>
+                                    </svg>
+                                </a>` : '';
+                            return `
                             <tr>
                                 <td style="color:var(--text-secondary)">${idx + 1}</td>
-                                <td>${s.stock_name || '-'}</td>
+                                <td>
+                                    <div style="display:flex;align-items:center">
+                                        ${s.stock_name || '-'}${reportIcon}
+                                    </div>
+                                </td>
                                 <td>${s.market || ''}${s.stock_code || '-'}</td>
                                 <td>${(s.recommenders || []).join(', ')}</td>
                                 <td class="${(s.change_pct || 0) >= 0 ? 'positive' : 'negative'}">
@@ -897,7 +933,8 @@
                                     </div>
                                 </td>
                             </tr>
-                        `).join('')}
+                        `;
+                        }).join('')}
                     </tbody>
                 </table>
             `;

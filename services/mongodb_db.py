@@ -229,7 +229,7 @@ class MongoDB:
     
     @property
     def tracking(self):
-        return self.db['stock_tracking']
+        return self.db['stocks']
     
     def get_stock_tracking(self, market: str, stock_code: str) -> Optional[Dict]:
         """获取单只股票跟踪数据"""
