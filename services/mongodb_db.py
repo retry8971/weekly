@@ -3,8 +3,9 @@ MongoDB数据操作层
 
 与ExcelDB接口一致，可作为替代数据源
 集合:
-  - stock_recommendations: 每周推荐数据
+  - stock_weekly_batches: 每周推荐数据
   - stock_recommenders: 推荐人统计数据
+  - stock_profiles: 股票数据
 """
 from datetime import datetime
 from typing import List, Dict, Any, Optional
@@ -35,7 +36,7 @@ class MongoDB:
     
     @property
     def recommendations(self):
-        return self.db['stock_recommendations']
+        return self.db['stock_weekly_batches']
     
     @property
     def stats(self):
@@ -229,7 +230,7 @@ class MongoDB:
     
     @property
     def tracking(self):
-        return self.db['stocks']
+        return self.db['stock_profiles']
     
     def get_stock_tracking(self, market: str, stock_code: str) -> Optional[Dict]:
         """获取单只股票跟踪数据"""
