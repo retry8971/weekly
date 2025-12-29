@@ -232,6 +232,41 @@ class MongoDB:
     def tracking(self):
         return self.db['stock_profiles']
     
+    @property
+    def materials(self):
+        return self.db['stock_materials']
+    
+    # ==================== 相关资料 ====================
+    
+    def get_materials_by_stock(self, market: str, code: str, limit: int = 10) -> List[Dict]:
+        """根据股票代码获取相关资料"""
+        docs = self.materials.find(
+            {'linked_stocks': {'$elemMatch': {'market': market, 'code': code}}},
+            {'_id': 0, 'title': 1, 'url': 1, 'description': 1, 
+             'generate_text': 1, 'material_date': 1, 'type': 1}
+        ).sort('material_date', -1).limit(limit)
+        return list(docs)
+    
+    def get_all_materials_index(self) -> Dict[str, List[Dict]]:
+        """获取所有关联股票的资料索引，用于前端批量匹配"""
+        docs = self.materials.find(
+            {'linked_stocks': {'$ne': None}},
+            {'_id': 0, 'title': 1, 'url': 1, 'linked_stocks': 1, 'material_date': 1}
+        ).sort('material_date', -1)
+        
+        index = {}
+        for doc in docs:
+            for stock in doc.get('linked_stocks', []):
+                key = f"{stock.get('market', '').upper()}.{stock.get('code', '')}"
+                if key not in index:
+                    index[key] = []
+                index[key].append({
+                    'title': doc.get('title'),
+                    'url': doc.get('url'),
+                    'date': doc.get('material_date')
+                })
+        return index
+    
     def get_stock_tracking(self, market: str, stock_code: str) -> Optional[Dict]:
         """获取单只股票跟踪数据"""
         doc = self.tracking.find_one({'market': market, 'stock_code': stock_code})

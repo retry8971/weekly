@@ -578,11 +578,55 @@
             background: var(--card-bg);
             border: var(--glass-border);
             border-radius: 1rem;
-            max-width: 700px;
-            width: 90%;
-            max-height: 80vh;
+            max-width: 900px;
+            width: 95%;
+            max-height: 85vh;
             display: flex;
             flex-direction: column;
+        }
+
+        /* 图片预览弹窗 */
+        .image-preview-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 20000;
+            cursor: zoom-out;
+        }
+
+        .image-preview-overlay img {
+            max-width: 95vw;
+            max-height: 95vh;
+            object-fit: contain;
+            border-radius: 0.5rem;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .image-preview-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            font-size: 2rem;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-preview-close:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .raw-modal-header {
@@ -861,6 +905,12 @@
         </div>
     </div>
 
+    <!-- Image Preview Overlay -->
+    <div id="imagePreviewOverlay" class="image-preview-overlay" onclick="closeImagePreview()">
+        <button class="image-preview-close" onclick="closeImagePreview()">&times;</button>
+        <img id="imagePreviewImg" src="" alt="图片预览" onclick="event.stopPropagation()" />
+    </div>
+
     <!-- Custom Tooltip -->
     <div id="customTooltip" class="custom-tooltip"></div>
 
@@ -913,6 +963,26 @@
             return num > 0 ? 'up' : 'down'; // CN Market: Red = Up
         }
 
+        // Image Preview
+        function showImagePreview(url) {
+            const overlay = document.getElementById('imagePreviewOverlay');
+            const img = document.getElementById('imagePreviewImg');
+            img.src = url;
+            overlay.style.display = 'flex';
+        }
+
+        function closeImagePreview() {
+            const overlay = document.getElementById('imagePreviewOverlay');
+            overlay.style.display = 'none';
+        }
+
+        // ESC 关闭图片预览
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeImagePreview();
+            }
+        });
+
         // Raw Text Modal
         let globalRawText = '';
 
@@ -952,7 +1022,7 @@
         let currentYear, currentWeek;
         let globalStocks = []; // Store for export
         let recommenderRatings = {}; // 推荐人评级映射
-        let reportMap = new Map(); // code -> url
+        let materialsMap = {}; // market.code -> [{title, url, date}]
         let availableWeeks = []; // 数据库中可用的周列表
         let dbMaxYear = 0, dbMaxWeek = 0; // 数据库中最大的年/周
         const today = new Date();
@@ -1181,11 +1251,14 @@
                         : `<span class="tag ${ratingClass}">${r}</span>`;
                 }).join('');
 
-                const reportUrl = reportMap.get(stock.code);
-                const reportIcon = reportUrl ? `
-                    <a href="${reportUrl}" target="_blank" title="查看研报" 
-                       style="margin-left:0.5rem; display:inline-flex; align-items:center; color:var(--accent-color); opacity:0.8; transition:opacity 0.2s;"
-                       onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8" onclick="event.stopPropagation();">
+                // 相关资料图标
+                const materialKey = `${(stock.market || '').toUpperCase()}.${stock.code}`;
+                const materials = materialsMap[materialKey] || [];
+                const materialIcon = materials.length > 0 ? `
+                    <span class="material-icon" onclick="event.stopPropagation(); showMaterials('${materialKey}', '${stock.name}', '${stock.code}')" 
+                       style="margin-left:0.5rem; display:inline-flex; align-items:center; color:var(--accent-color); opacity:0.8; transition:opacity 0.2s; cursor:pointer;"
+                       onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8"
+                       title="${materials.length}篇相关资料">
                         <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                             <polyline points="14 2 14 8 20 8"></polyline>
@@ -1193,14 +1266,15 @@
                             <line x1="16" y1="17" x2="8" y2="17"></line>
                             <polyline points="10 9 9 9 8 9"></polyline>
                         </svg>
-                    </a>` : '';
+                        <span style="font-size:0.65rem;margin-left:2px;">${materials.length}</span>
+                    </span>` : '';
 
                 li.innerHTML = `
                     <div class="rank-num ${rankClass}">${index + 1}</div>
                     <div>
                         <div style="display:flex; align-items:center;">
                             <div class="stock-name clickable" onclick="showStockHistory('${stock.code}', '${stock.name}')">${stock.name}</div>
-                            ${reportIcon}
+                            ${materialIcon}
                         </div>
                         <div class="stock-code">${stock.code}${stock.market ? '.' + stock.market.toUpperCase() : ''}</div>
                     </div>
@@ -1223,22 +1297,99 @@
         // Initial fetch
         async function init() {
             await fetchRecommenderRatings();
-            await fetchReportCodes();
+            await fetchMaterialsIndex();
             fetchData();
         }
 
-        // 获取研报列表
-        async function fetchReportCodes() {
+        // 获取相关资料索引
+        async function fetchMaterialsIndex() {
             try {
-                const res = await fetch('/api/reports');
+                const res = await fetch('/api/stock-materials');
                 const data = await res.json();
-                const reports = data.data || [];
-                reportMap = new Map(reports.map(r => {
-                    const url = r.type === 'link' ? r.url : `/reports/${r.filename}`;
-                    return [r.stock_code, url];
-                }));
+                materialsMap = data.data || {};
             } catch (e) {
-                console.warn('获取研报列表失败:', e);
+                console.warn('获取资料索引失败:', e);
+            }
+        }
+
+        // 显示相关资料弹窗
+        async function showMaterials(key, stockName, stockCode) {
+            const modal = document.getElementById('stockDetailModal');
+            const title = document.getElementById('stockModalTitle');
+            const body = document.getElementById('stockModalBody');
+
+            title.textContent = `📄 ${stockName} (${stockCode}) 相关资料`;
+            body.innerHTML = '<div style="text-align:center;color:var(--text-secondary)">加载中...</div>';
+            modal.style.display = 'flex';
+
+            try {
+                const [market, code] = key.split('.');
+                const res = await fetch(`/api/stock-materials/${market}/${code}`);
+                const data = await res.json();
+                const materials = data.data || [];
+
+                if (materials.length === 0) {
+                    body.innerHTML = '<div style="text-align:center;color:var(--text-secondary)">暂无相关资料</div>';
+                    return;
+                }
+
+
+                body.innerHTML = '<ul style="list-style:none;padding:0;margin:0">' + materials.map((m, idx) => {
+                    const isFirst = idx === 0;
+                    // 根据类型设置不同的图标、颜色和标签
+                    const typeConfig = {
+                        report: { icon: '📄', label: 'PDF 研报', color: '#ef4444', bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.3)' },
+                        note: { icon: '📝', label: '笔记', color: '#22c55e', bg: 'rgba(34,197,94,0.15)', border: 'rgba(34,197,94,0.3)' },
+                        image: { icon: '🖼️', label: '图片', color: '#a855f7', bg: 'rgba(168,85,247,0.15)', border: 'rgba(168,85,247,0.3)' },
+                        link: { icon: '🔗', label: '链接', color: '#3b82f6', bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.3)' }
+                    };
+                    const cfg = typeConfig[m.type] || typeConfig.link;
+                    const typeTag = `<span style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.15rem 0.4rem;background:${cfg.bg};border:1px solid ${cfg.border};border-radius:0.25rem;color:${cfg.color};font-size:0.7rem;font-weight:600;margin-left:0.5rem;">${cfg.icon} ${cfg.label}</span>`;
+
+                    return `
+                        <li class="time-group">
+                            <div class="time-header" onclick="toggleStockGroup(this)">
+                                <span style="color:var(--accent-color);font-weight:600;min-width:6rem">${m.material_date || '未知日期'}</span>
+                                <span style="flex:1;display:flex;align-items:center;color:var(--text-primary);font-size:0.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.title || '未命名资料'}${typeTag}</span>
+                                <span style="color:var(--text-secondary);font-size:0.75rem;margin-left:auto">${isFirst ? '▼' : '▶'}</span>
+                            </div>
+                            <div class="time-items" style="display:${isFirst ? 'block' : 'none'}">
+                                ${m.type === 'image' && m.url ? `
+                                    <div style="display:flex;gap:1rem;align-items:flex-start;">
+                                        <div style="flex:1;min-width:0;">
+                                            ${m.generate_text ? `<div style="color:var(--text-primary);font-size:0.85rem;line-height:1.6;white-space:pre-wrap;">${m.generate_text}</div>` : ''}
+                                        </div>
+                                        <div style="flex-shrink:0;cursor:zoom-in;" onclick="event.stopPropagation(); showImagePreview('${m.url}')">
+                                            <img src="${m.url}" alt="${m.title || '图片预览'}" 
+                                                 style="max-width:180px;max-height:140px;border-radius:0.5rem;border:1px solid var(--row-border);
+                                                        object-fit:cover;transition:transform 0.2s;"
+                                                 onmouseover="this.style.transform='scale(1.05)'"
+                                                 onmouseout="this.style.transform='scale(1)'"
+                                                 onerror="this.style.display='none'"/>
+                                        </div>
+                                    </div>
+                                ` : `
+                                    ${m.description ? `<div style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:0.75rem;line-height:1.5;">${m.description}</div>` : ''}
+                                    ${m.generate_text ? `<div style="color:var(--text-primary);font-size:0.85rem;line-height:1.6;white-space:pre-wrap;">${m.generate_text}</div>` : ''}
+                                    ${m.url ? `
+                                        <a href="${m.url}" target="_blank" 
+                                           style="display:inline-flex;align-items:center;gap:0.5rem;margin-top:0.75rem;padding:0.5rem 0.75rem;
+                                                  background:linear-gradient(135deg, ${cfg.bg} 0%, ${cfg.bg.replace('0.15', '0.1')} 100%);
+                                                  border:1px solid ${cfg.border};border-radius:0.375rem;
+                                                  color:${cfg.color};font-size:0.8rem;font-weight:500;text-decoration:none;
+                                                  transition:all 0.2s;">
+                                            <span style="font-size:1.1rem">${cfg.icon}</span>
+                                            <span style="font-weight:600">${cfg.label}</span>
+                                            <span style="opacity:0.8">查看原文</span>
+                                        </a>
+                                    ` : ''}
+                                `}
+                            </div>
+                        </li>
+                    `;
+                }).join('') + '</ul>';
+            } catch (e) {
+                body.innerHTML = `<div style="text-align:center;color:var(--danger-color)">加载失败: ${e.message}</div>`;
             }
         }
 
@@ -1265,29 +1416,27 @@
                 }
                 const stock = stockTrackingCache.find(s => s.stock_code === code.replace(/^[A-Z]+\./, ''));
 
-                if (!stock || !stock.recommendations?.length) {
+                // 适配新的 weekly_recommendations 结构: {week: {recommender: reason}}
+                const weeklyRecs = stock?.weekly_recommendations || {};
+                const weeks = Object.keys(weeklyRecs);
+
+                if (!stock || weeks.length === 0) {
                     body.innerHTML = '<div style="text-align:center;color:var(--text-secondary)">暂无历史推荐记录</div>';
                     return;
                 }
 
-                // 按时间分组
-                const groups = {};
-                stock.recommendations.forEach(r => {
-                    const time = r.time || '未知';
-                    if (!groups[time]) groups[time] = [];
-                    groups[time].push(r);
-                });
+                // 按周排序（降序）
+                const sortedWeeks = weeks.sort((a, b) => b.localeCompare(a));
 
-                const sortedTimes = Object.keys(groups).sort((a, b) => b.localeCompare(a));
-
-                body.innerHTML = '<ul style="list-style:none;padding:0;margin:0">' + sortedTimes.map((time, idx) => {
-                    const items = groups[time];
+                body.innerHTML = '<ul style="list-style:none;padding:0;margin:0">' + sortedWeeks.map((week, idx) => {
+                    const recommenders = weeklyRecs[week] || {};
+                    const items = Object.entries(recommenders).map(([name, reason]) => ({ recommender: name, reason }));
                     const isFirst = idx === 0;
                     const namesPreview = items.map(r => r.recommender).join(', ');
                     return `
                         <li class="time-group">
                             <div class="time-header" onclick="toggleStockGroup(this)">
-                                <span style="color:var(--accent-color);font-weight:600;min-width:5.5rem">${time}</span>
+                                <span style="color:var(--accent-color);font-weight:600;min-width:5.5rem">${week}</span>
                                 <span class="names-preview" style="flex:1;color:var(--text-secondary);font-size:0.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:${isFirst ? 'none' : 'block'}">${namesPreview}</span>
                                 <span style="color:var(--text-secondary);font-size:0.75rem;background:rgba(0,0,0,0.3);padding:0.15rem 0.4rem;border-radius:10px;margin-left:auto">${items.length}条 ${isFirst ? '▼' : '▶'}</span>
                             </div>

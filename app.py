@@ -251,6 +251,26 @@ def reset_week_sync(year, week):
     return jsonify({'data': {'success': True, 'deleted': deleted}})
 
 
+# ==================== 相关资料 API ====================
+
+@app.route('/api/stock-materials', methods=['GET'])
+def get_stock_materials_index():
+    """获取所有股票的相关资料索引"""
+    from services.mongodb_db import get_db
+    db = get_db()
+    index = db.get_all_materials_index()
+    return jsonify({'data': index})
+
+
+@app.route('/api/stock-materials/<market>/<code>', methods=['GET'])
+def get_stock_materials(market, code):
+    """获取单只股票的相关资料详情"""
+    from services.mongodb_db import get_db
+    db = get_db()
+    materials = db.get_materials_by_stock(market.upper(), code)
+    return jsonify({'data': materials})
+
+
 # ==================== 研报管理 API ====================
 
 REPORTS_DIR = os.path.join(os.path.dirname(__file__), 'reports')
