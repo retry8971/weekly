@@ -1083,28 +1083,86 @@
             document.getElementById('nextBtn').disabled = atMax;
         }
 
+        // Get total weeks in a year (52 or 53)
+        function getWeeksInYear(year) {
+            const d = new Date(year, 11, 28); // Dec 28 is always in the last ISO week
+            return getISOWeek(d);
+        }
+
         // Navigate
         function navigate(delta) {
-            let newWeek = currentWeek + delta;
-            let newYear = currentYear;
+            // 如果没有可用周数据，使用传统计算方式
+            if (availableWeeks.length === 0) {
+                let newWeek = currentWeek + delta;
+                let newYear = currentYear;
+                const weeksInYear = getWeeksInYear(currentYear);
+                const weeksInPrevYear = getWeeksInYear(currentYear - 1);
 
-            if (newWeek > 52) {
-                newWeek = 1;
-                newYear++;
-            } else if (newWeek < 1) {
-                newWeek = 52;
-                newYear--;
-            }
-
-            // 根据数据库最大周限制
-            if (dbMaxYear > 0 && delta > 0) {
-                if (newYear > dbMaxYear || (newYear === dbMaxYear && newWeek > dbMaxWeek)) {
-                    return;
+                if (newWeek > weeksInYear) {
+                    newWeek = 1;
+                    newYear++;
+                } else if (newWeek < 1) {
+                    newWeek = weeksInPrevYear;
+                    newYear--;
                 }
+
+                currentYear = newYear;
+                currentWeek = newWeek;
+                updateDisplay();
+                updateHash();
+                fetchData();
+                return;
             }
 
-            currentYear = newYear;
-            currentWeek = newWeek;
+            // 基于可用周列表进行导航
+            // 对可用周按时间排序（升序）
+            const sortedWeeks = [...availableWeeks].sort((a, b) =>
+                (a.year * 100 + a.week) - (b.year * 100 + b.week)
+            );
+
+            // 找到当前周在列表中的位置
+            const currentIdx = sortedWeeks.findIndex(
+                w => w.year === currentYear && w.week === currentWeek
+            );
+
+            console.log('[Navigate] sortedWeeks:', sortedWeeks.map(w => `${w.year}W${w.week}`));
+            console.log('[Navigate] currentIdx:', currentIdx, 'delta:', delta);
+
+            let targetIdx;
+            if (currentIdx === -1) {
+                // 当前周不在可用列表中，找最近的
+                if (delta > 0) {
+                    // 向前：找第一个比当前大的
+                    targetIdx = sortedWeeks.findIndex(
+                        w => (w.year * 100 + w.week) > (currentYear * 100 + currentWeek)
+                    );
+                    if (targetIdx === -1) return; // 没有更新的周
+                } else {
+                    // 向后：找最后一个比当前小的
+                    for (let i = sortedWeeks.length - 1; i >= 0; i--) {
+                        if ((sortedWeeks[i].year * 100 + sortedWeeks[i].week) < (currentYear * 100 + currentWeek)) {
+                            targetIdx = i;
+                            break;
+                        }
+                    }
+                    if (targetIdx === undefined) return; // 没有更早的周
+                }
+            } else {
+                // 当前周在列表中
+                targetIdx = currentIdx + delta;
+            }
+
+            // 边界检查
+            if (targetIdx < 0 || targetIdx >= sortedWeeks.length) {
+                console.log('[Navigate] Out of bounds:', targetIdx);
+                return;
+            }
+
+            const target = sortedWeeks[targetIdx];
+            console.log('[Navigate] Navigating to:', target);
+
+            currentYear = target.year;
+            currentWeek = target.week;
             updateDisplay();
             updateHash();
             fetchData();
