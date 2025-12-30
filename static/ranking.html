@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nebula Stock Rankings</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://s3.fee.red:9090/web/cdn/marked@15.0.12/marked.min.js"></script>
 
     <style>
         :root {
@@ -583,6 +584,44 @@
             max-height: 85vh;
             display: flex;
             flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        /* 最大化模态框 */
+        .raw-modal.maximized {
+            max-width: 100%;
+            width: 100%;
+            max-height: 100vh;
+            height: 100vh;
+            border-radius: 0;
+        }
+
+        .raw-modal.maximized .stock-modal-body {
+            max-height: calc(100vh - 60px);
+        }
+
+        .raw-modal-maximize {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .raw-modal-maximize:hover {
+            opacity: 1;
+        }
+
+        .raw-modal-header-actions {
+            display: flex;
+            align-items: center;
         }
 
         /* 图片预览弹窗 */
@@ -647,8 +686,15 @@
             background: none;
             border: none;
             color: var(--text-secondary);
-            font-size: 1.5rem;
             cursor: pointer;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            line-height: 1;
+            padding: 0;
         }
 
         .raw-modal-body {
@@ -834,6 +880,113 @@
                 font-size: 0.7rem;
             }
         }
+
+        /* Markdown 内容样式 */
+        .markdown-content {
+            font-size: 0.85rem;
+            line-height: 1.7;
+            color: var(--text-primary);
+        }
+
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3,
+        .markdown-content h4,
+        .markdown-content h5,
+        .markdown-content h6 {
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-content h1 {
+            font-size: 1.3rem;
+        }
+
+        .markdown-content h2 {
+            font-size: 1.15rem;
+        }
+
+        .markdown-content h3 {
+            font-size: 1rem;
+        }
+
+        .markdown-content p {
+            margin-bottom: 0.75em;
+        }
+
+        .markdown-content ul,
+        .markdown-content ol {
+            margin-left: 1.5em;
+            margin-bottom: 0.75em;
+        }
+
+        .markdown-content li {
+            margin-bottom: 0.25em;
+        }
+
+        .markdown-content code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.1em 0.3em;
+            border-radius: 0.25rem;
+            font-size: 0.9em;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .markdown-content pre {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin-bottom: 0.75em;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content blockquote {
+            border-left: 3px solid var(--accent-color);
+            padding-left: 1rem;
+            margin: 0.75em 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-content a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-content a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 0.75em;
+        }
+
+        .markdown-content th,
+        .markdown-content td {
+            border: 1px solid var(--row-border);
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content th {
+            background: var(--header-bg);
+        }
+
+        [data-theme="light"] .markdown-content code {
+            background: rgba(0, 0, 0, 0.08);
+        }
+
+        [data-theme="light"] .markdown-content pre {
+            background: rgba(0, 0, 0, 0.05);
+        }
     </style>
 </head>
 
@@ -897,7 +1050,15 @@
         <div class="raw-modal" onclick="event.stopPropagation()">
             <div class="raw-modal-header">
                 <h2 id="stockModalTitle">📈 股票历史推荐</h2>
-                <button class="raw-modal-close" onclick="closeStockModal()">&times;</button>
+                <div class="raw-modal-header-actions">
+                    <button class="raw-modal-maximize" onclick="toggleMaximizeModal('stockDetailModal')" title="最大化/还原">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2"
+                            fill="none">
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                        </svg>
+                    </button>
+                    <button class="raw-modal-close" onclick="closeStockModal()">&times;</button>
+                </div>
             </div>
             <div class="stock-modal-body" id="stockModalBody">
                 Loading...
@@ -1414,8 +1575,9 @@
                             <div class="time-items" style="display:${isFirst ? 'block' : 'none'}">
                                 ${m.type === 'image' && m.url ? `
                                     <div style="display:flex;gap:1rem;align-items:flex-start;">
-                                        <div style="flex:1;min-width:0;">
-                                            ${m.generate_text ? `<div style="color:var(--text-primary);font-size:0.85rem;line-height:1.6;white-space:pre-wrap;">${m.generate_text}</div>` : ''}
+                                        <div class="markdown-content" style="flex:1;min-width:0;">
+                                            ${m.generate_text ? marked.parse(m.generate_text) : ''}
+                                        </div>
                                         </div>
                                         <div style="flex-shrink:0;cursor:zoom-in;" onclick="event.stopPropagation(); showImagePreview('${m.url}')">
                                             <img src="${m.url}" alt="${m.title || '图片预览'}" 
@@ -1426,9 +1588,33 @@
                                                  onerror="this.style.display='none'"/>
                                         </div>
                                     </div>
+                                ` : m.type === 'note' ? `
+                                    ${m.description ? `<div class="markdown-content" style="margin-bottom:0.75rem;">${marked.parse(m.description)}</div>` : ''}
+                                    ${m.generate_text ? `
+                                        <details style="margin-top:0.5rem;">
+                                            <summary style="cursor:pointer;color:var(--text-secondary);font-size:0.8rem;padding:0.4rem 0.6rem;background:rgba(34,197,94,0.1);border-radius:0.25rem;display:inline-flex;align-items:center;gap:0.4rem;">
+                                                <span style="font-size:0.9rem;">🤖</span> AI 分析
+                                            </summary>
+                                            <div class="markdown-content" style="margin-top:0.75rem;padding:0.75rem;background:rgba(34,197,94,0.05);border-radius:0.5rem;border-left:3px solid rgba(34,197,94,0.3);">
+                                                ${marked.parse(m.generate_text)}
+                                            </div>
+                                        </details>
+                                    ` : ''}
+                                    ${m.url ? `
+                                        <a href="${m.url}" target="_blank" 
+                                           style="display:inline-flex;align-items:center;gap:0.5rem;margin-top:0.75rem;padding:0.5rem 0.75rem;
+                                                  background:linear-gradient(135deg, ${cfg.bg} 0%, ${cfg.bg.replace('0.15', '0.1')} 100%);
+                                                  border:1px solid ${cfg.border};border-radius:0.375rem;
+                                                  color:${cfg.color};font-size:0.8rem;font-weight:500;text-decoration:none;
+                                                  transition:all 0.2s;">
+                                            <span style="font-size:1.1rem">${cfg.icon}</span>
+                                            <span style="font-weight:600">${cfg.label}</span>
+                                            <span style="opacity:0.8">查看原文</span>
+                                        </a>
+                                    ` : ''}
                                 ` : `
                                     ${m.description ? `<div style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:0.75rem;line-height:1.5;">${m.description}</div>` : ''}
-                                    ${m.generate_text ? `<div style="color:var(--text-primary);font-size:0.85rem;line-height:1.6;white-space:pre-wrap;">${m.generate_text}</div>` : ''}
+                                    ${m.generate_text ? `<div class="markdown-content">${marked.parse(m.generate_text)}</div>` : ''}
                                     ${m.url ? `
                                         <a href="${m.url}" target="_blank" 
                                            style="display:inline-flex;align-items:center;gap:0.5rem;margin-top:0.75rem;padding:0.5rem 0.75rem;
@@ -1533,7 +1719,16 @@
 
         function closeStockModal(event) {
             if (event && event.target !== event.currentTarget) return;
-            document.getElementById('stockDetailModal').style.display = 'none';
+            const modal = document.getElementById('stockDetailModal');
+            modal.querySelector('.raw-modal').classList.remove('maximized');
+            modal.style.display = 'none';
+        }
+
+        // 切换模态框最大化
+        function toggleMaximizeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const content = modal.querySelector('.raw-modal');
+            content.classList.toggle('maximized');
         }
 
         // Export to Excel (XLSX)
